@@ -20,7 +20,7 @@ El contrato OpenAPI de la API REST se encuentra en `backend`. La infraestructura
 - `AGENTS.md`: instrucciones generales para los agentes de IA.
 - `README.md`: presentación del proyecto e instrucciones de uso.
 
-Cada especificación debe residir en `specs/NNN-nombre-descriptivo/` y contener:
+Cada especificación debe residir en `specs/NN-nombre-descriptivo/` y contener:
 - `spec.md`: requisitos y criterios de aceptación.
 - `plan.md`: diseño y estrategia de implementación.
 - `tasks.md`: tareas de implementación verificables.
