@@ -1,10 +1,12 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { ViewportScroller } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { NEVER, firstValueFrom, of } from 'rxjs';
 import { routes } from '../../../app.routes';
+import { FakeViewportScroller } from '../../../testing/fake-viewport-scroller';
 import { StatusApiService } from '../../../core/status/status-api.service';
 import { FakeEventSource } from '../../../testing/fake-event-source';
 import { installDialogPolyfill } from '../../../testing/dialog-polyfill';
@@ -30,6 +32,7 @@ describe('leaving the RabbitMQ lab with consumers (CA-9.14)', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter(routes),
+        { provide: ViewportScroller, useClass: FakeViewportScroller },
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: StatusApiService, useValue: { getStatus: () => NEVER } },

@@ -1,10 +1,20 @@
 :host {
+  /* alto de la cabecera fija: las demás zonas fijas se colocan justo debajo */
+  --header-height: 3.5rem;
   display: block;
   min-height: 100vh;
 }
 
+/* La cabecera y el menú lateral se quedan fijos al bajar por una página larga */
 .header {
-  padding: 1rem 1.5rem;
+  position: sticky;
+  top: 0;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  height: var(--header-height);
+  padding: 0 1.5rem;
   background: #14213d;
   color: #fff;
 }
@@ -20,14 +30,22 @@
 }
 
 .sidebar {
+  position: sticky;
+  top: var(--header-height);
+  align-self: flex-start;
+  box-sizing: border-box;
   flex: 0 0 18rem;
+  max-height: calc(100vh - var(--header-height));
   padding: 1rem;
-  border-right: 1px solid #ddd;
+  overflow-y: auto;
 }
 
 .content {
   flex: 1 1 20rem;
+  min-width: 0;
   padding: 1.5rem;
+  /* el separador va aquí y no en el menú, para que llegue hasta abajo aunque el menú sea más corto */
+  border-left: 1px solid #ddd;
 }
 
 ul {
@@ -92,10 +110,17 @@ a:focus-visible,
   font-weight: 600;
 }
 
+/* En pantallas estrechas el menú ocuparía media pantalla: ahí no se queda fijo */
 @media (max-width: 40rem) {
   .sidebar {
+    position: static;
     flex-basis: 100%;
-    border-right: 0;
+    max-height: none;
+    overflow-y: visible;
     border-bottom: 1px solid #ddd;
+  }
+
+  .content {
+    border-left: 0;
   }
 }

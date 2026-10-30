@@ -23,7 +23,7 @@
     <ul>
       @for (area of areas; track area.path) {
         <li>
-          @if (connection.operationsEnabled()) {
+          @if (connection.operationsEnabled() || area.worksOffline) {
             <a [routerLink]="area.path" routerLinkActive="active" ariaCurrentWhenActive="page">
               {{ area.label }}
             </a>
@@ -38,12 +38,13 @@
 
   @if (state.kind !== 'connected') {
     <p class="disabled-note">
-      Las operaciones del laboratorio están deshabilitadas mientras no haya conexión con RabbitMQ.
+      Las operaciones del laboratorio están deshabilitadas mientras no haya conexión con RabbitMQ. La guía se
+      puede leer igualmente.
     </p>
   }
 
-  @if (connection.hasConnected()) {
-    <fieldset class="area" [disabled]="!connection.operationsEnabled()">
+  @if (connection.hasConnected() || onGuide()) {
+    <fieldset class="area" [disabled]="!connection.operationsEnabled() && !onGuide()">
       <router-outlet />
     </fieldset>
   }

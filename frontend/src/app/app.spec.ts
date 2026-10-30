@@ -1,9 +1,11 @@
+import { ViewportScroller } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { NEVER } from 'rxjs';
 import { App } from './app';
 import { routes } from './app.routes';
 import { StatusApiService } from './core/status/status-api.service';
+import { FakeViewportScroller } from './testing/fake-viewport-scroller';
 
 describe('App', () => {
   beforeEach(async () => {
@@ -11,6 +13,7 @@ describe('App', () => {
       imports: [App],
       providers: [
         provideRouter(routes),
+        { provide: ViewportScroller, useClass: FakeViewportScroller },
         { provide: StatusApiService, useValue: { getStatus: () => NEVER } },
       ],
     }).compileComponents();

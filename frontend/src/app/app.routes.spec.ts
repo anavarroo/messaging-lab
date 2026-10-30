@@ -1,8 +1,10 @@
+import { ViewportScroller } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { NEVER } from 'rxjs';
 import { routes } from './app.routes';
+import { FakeViewportScroller } from './testing/fake-viewport-scroller';
 import { StatusApiService } from './core/status/status-api.service';
 import { StatusPage } from './features/status/status-page/status-page';
 
@@ -14,6 +16,7 @@ describe('routes', () => {
     TestBed.configureTestingModule({
       providers: [
         provideRouter(routes),
+        { provide: ViewportScroller, useClass: FakeViewportScroller },
         { provide: StatusApiService, useValue: { getStatus: () => NEVER } },
       ],
     });

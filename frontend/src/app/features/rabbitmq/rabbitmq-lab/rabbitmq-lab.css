@@ -45,6 +45,15 @@ h2 {
   cursor: not-allowed;
 }
 
+/* Las pestañas se quedan fijas, justo bajo la cabecera, al bajar por una página larga */
+.tabs {
+  position: sticky;
+  top: var(--header-height, 0);
+  z-index: 20;
+  padding-top: 0.5rem;
+  background: #fff;
+}
+
 .tabs ul {
   display: flex;
   flex-wrap: wrap;
@@ -93,4 +102,11 @@ a:focus-visible,
 .retry:focus-visible {
   outline: 3px solid #f2a900;
   outline-offset: 2px;
+}
+
+@media (max-width: 40rem) {
+  /* con varias filas de pestañas ocuparían demasiado: en pantallas estrechas no se quedan fijas */
+  .tabs {
+    position: static;
+  }
 }

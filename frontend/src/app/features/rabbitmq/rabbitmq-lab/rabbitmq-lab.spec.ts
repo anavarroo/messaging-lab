@@ -1,10 +1,12 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { ViewportScroller } from '@angular/common';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { NEVER } from 'rxjs';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { routes } from '../../../app.routes';
+import { FakeViewportScroller } from '../../../testing/fake-viewport-scroller';
 import { ApiError } from '../../../core/http/api-error';
 import { RabbitMqConnection } from '../connection/rabbitmq-connection';
 import { BindingsApi } from '../bindings/bindings-api';
@@ -14,8 +16,9 @@ import { QueuesApi } from '../queues/queues-api';
 import { RabbitMqLab } from './rabbitmq-lab';
 
 describe('RabbitMqLab', () => {
+  const exchangesList = vi.fn(() => NEVER);
   const STATUS = '/api/rabbitmq/status';
-  const AREAS = ['Exchanges', 'Colas', 'Bindings', 'Publicación', 'Consumidores'];
+  const AREAS = ['Guía', 'Exchanges', 'Colas', 'Bindings', 'Publicación', 'Consumidores'];
 
   let harness: RouterTestingHarness;
   let router: Router;
@@ -23,13 +26,15 @@ describe('RabbitMqLab', () => {
   let page: HTMLElement;
 
   beforeEach(async () => {
+    exchangesList.mockClear();
     TestBed.configureTestingModule({
       providers: [
         provideRouter(routes),
+        { provide: ViewportScroller, useClass: FakeViewportScroller },
         provideHttpClient(),
         provideHttpClientTesting(),
         // las pantallas de cada área se prueban aparte: aquí solo importa que se muestren
-        { provide: ExchangesApi, useValue: { list: () => NEVER } },
+        { provide: ExchangesApi, useValue: { list: exchangesList } },
         { provide: QueuesApi, useValue: { list: () => NEVER } },
         { provide: BindingsApi, useValue: { list: () => NEVER } },
         { provide: PublishApi, useValue: {} },
@@ -102,12 +107,13 @@ describe('RabbitMqLab', () => {
     expect(page.querySelector('app-exchanges-page')).not.toBeNull();
   });
 
-  it('offers the five areas and navigates between all of them', async () => {
+  it('offers the guide plus the five areas and navigates between all of them', async () => {
     await enter();
     await connect();
 
     expect(tabs().map((tab) => tab.textContent?.trim())).toEqual(AREAS);
     const expected = [
+      ['/rabbitmq/guide', 'app-guide-page'],
       ['/rabbitmq/exchanges', 'app-exchanges-page'],
       ['/rabbitmq/queues', 'app-queues-page'],
       ['/rabbitmq/bindings', 'app-bindings-page'],
@@ -129,7 +135,7 @@ describe('RabbitMqLab', () => {
     await enter();
     await connect();
 
-    tabs()[1].click();
+    tabs()[2].click();
     await harness.fixture.whenStable();
 
     http.expectNone(STATUS);
@@ -141,7 +147,9 @@ describe('RabbitMqLab', () => {
 
     expect(page.querySelector('.connection [role="alert"]')?.textContent).toContain('RabbitMQ no está disponible.');
     expect(text()).toContain('Las operaciones del laboratorio están deshabilitadas');
-    tabs().forEach((tab) => expect(tab.getAttribute('aria-disabled')).toBe('true'));
+    tabs()
+      .filter((tab) => tab.textContent?.trim() !== 'Guía')
+      .forEach((tab) => expect(tab.getAttribute('aria-disabled')).toBe('true'));
     expect(retryButton()?.disabled).toBe(false);
   });
 
@@ -159,7 +167,7 @@ describe('RabbitMqLab', () => {
     await failWith503();
     const urlBefore = router.url;
 
-    tabs()[1].click();
+    tabs()[2].click();
     await harness.fixture.whenStable();
 
     expect(router.url).toBe(urlBefore);
@@ -215,5 +223,89 @@ describe('RabbitMqLab', () => {
 
     expect(page.querySelector('.connection')?.getAttribute('aria-live')).toBe('polite');
     expect(harness.routeDebugElement?.componentInstance).toBeInstanceOf(RabbitMqLab);
+  });
+
+  describe('the guide (spec 03)', () => {
+    const guideTab = () => tabs().find((tab) => tab.textContent?.trim() === 'Guía')!;
+    const otherTabs = () => tabs().filter((tab) => tab.textContent?.trim() !== 'Guía');
+
+    it('is the first tab, inside the lab, and links to /rabbitmq/guide', async () => {
+      await enter();
+      await connect();
+
+      expect(tabs()[0].textContent?.trim()).toBe('Guía');
+      expect(tabs()[0].getAttribute('href')).toBe('/rabbitmq/guide');
+      expect(page.tagName).toBe('APP-RABBITMQ-LAB');
+    });
+
+    it('opens when its tab is pressed and marks the tab as current', async () => {
+      await enter();
+      await connect();
+
+      guideTab().click();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+
+      expect(router.url).toBe('/rabbitmq/guide');
+      expect(page.querySelector('app-guide-page')).not.toBeNull();
+      expect(guideTab().getAttribute('aria-current')).toBe('page');
+    });
+
+    it('still opens in Exchanges, not in the guide, when entering the lab', async () => {
+      await enter();
+      await connect();
+
+      expect(router.url).toBe('/rabbitmq/exchanges');
+    });
+
+    it('can be read when RabbitMQ is unavailable, with its tab enabled and the others disabled (CA-1.2)', async () => {
+      await enter('/rabbitmq/guide');
+      await failWith503();
+
+      expect(page.querySelector('app-guide-page')).not.toBeNull();
+      expect(page.querySelector('.guide h3')?.textContent).toContain('Guía de RabbitMQ');
+      expect(guideTab().hasAttribute('aria-disabled')).toBe(false);
+      expect(guideTab().getAttribute('href')).toBe('/rabbitmq/guide');
+      otherTabs().forEach((tab) => expect(tab.getAttribute('aria-disabled')).toBe('true'));
+      expect(page.querySelector('.connection [role="alert"]')?.textContent).toContain('RabbitMQ no está disponible.');
+      expect(page.querySelector('fieldset.area')?.hasAttribute('disabled')).toBe(false);
+      expect(text()).toContain('La guía se puede leer igualmente');
+    });
+
+    it('can be read even before the connection check has answered', async () => {
+      await enter('/rabbitmq/guide');
+
+      expect(page.querySelector('app-guide-page')).not.toBeNull();
+      http.expectOne(STATUS);
+    });
+
+    it('is reachable from a disabled lab by its tab', async () => {
+      await enter();
+      await failWith503();
+      expect(page.querySelector('app-guide-page')).toBeNull();
+
+      guideTab().click();
+      await harness.fixture.whenStable();
+      harness.detectChanges();
+
+      expect(router.url).toBe('/rabbitmq/guide');
+      expect(page.querySelector('app-guide-page')).not.toBeNull();
+    });
+
+    it('does not call the backend to show itself, apart from the lab connection check', async () => {
+      await enter('/rabbitmq/guide');
+      await connect();
+
+      http.expectNone(() => true);
+      expect(exchangesList).not.toHaveBeenCalled();
+    });
+
+    it('disables the operations of the other areas again after leaving the guide while unavailable', async () => {
+      await enter('/rabbitmq/guide');
+      await failWith503();
+
+      expect(page.querySelector('app-exchanges-page')).toBeNull();
+      expect(otherTabs().every((tab) => tab.getAttribute('aria-disabled') === 'true')).toBe(true);
+    });
   });
 });
