@@ -1,6 +1,6 @@
 # Tareas 01 — Base del proyecto
 
-- **Estado:** Propuesta pendiente de revisión
+- **Estado:** Aprobado
 - **Fecha:** 2026-10-29
 - **Referencias:** [spec.md](spec.md) · [plan.md](plan.md)
 
@@ -8,49 +8,49 @@ Las tareas están en orden de dependencia. Cada una debe completarse, con su com
 
 ## Fase 0 — Repositorio
 
-- [ ] **T01 — `.gitignore` y plantilla de puertos**
+- [x] **T01 — `.gitignore` y plantilla de puertos**
   Crear el `.gitignore` de la raíz (`infra/.env`, `backend/target/`, `frontend/node_modules/`, `frontend/dist/`, `frontend/.angular/`, IDE y SO) e `infra/.env.example` con `BACKEND_PORT` y `FRONTEND_PORT` comentados.
   *RF:* RF-5, RF-6 (RNF-5)
   *Hecho cuando:* al crear un `infra/.env` de prueba, `git status` no lo muestra, e `infra/.env.example` contiene las dos variables con sus valores por defecto (8080 y 4200).
 
 ## Fase 1 — Backend
 
-- [ ] **T02 — Esqueleto Spring Boot**
-  Crear `backend/` con Maven Wrapper, Java 21, `groupId` `com.messaginglab`, `artifactId` `messaging-lab-backend`, versión `0.1.0`, `spring-boot-starter-web`, `spring-boot-starter-validation`, `spring-boot-starter-test` y la clase `MessagingLabApplication`.
+- [x] **T02 — Esqueleto Spring Boot**
+  Crear `backend/` con Maven Wrapper, Java 21, `groupId` `com.messaginglab`, `artifactId` `messaging-lab-backend`, versión `0.1.0`, `spring-boot-starter-webmvc`, `spring-boot-starter-validation`, `spring-boot-starter-webmvc-test` y la clase `MessagingLabApplication`.
   *RF:* RF-5
   *Hecho cuando:* `cd backend && ./mvnw test` termina con BUILD SUCCESS y `./mvnw spring-boot:run` arranca sin errores.
 
-- [ ] **T03 — Contrato `backend/api/api.yml`**
+- [x] **T03 — Contrato `backend/api/api.yml`**
   Escribir el contrato OpenAPI 3.0.3 con `GET /api/status` (`operationId: getStatus`, etiqueta `Status`) y el esquema `StatusResponse` (`status` enumerado `AVAILABLE`, `name` y `version`, todos obligatorios).
   *RF:* RF-1 (CA-1.3)
   *Hecho cuando:* el archivo existe y describe la operación y el esquema tal como indica el plan §3.2. Se valida en T04.
 
-- [ ] **T04 — Generación de código a partir del contrato**
-  Configurar `openapi-generator-maven-plugin` (`interfaceOnly=true`, `documentationProvider=none`, `annotationLibrary=none`, `openApiNullable=false`, paquetes `com.messaginglab.api` y `com.messaginglab.api.model`) y comprobar su compatibilidad con la versión de Spring Boot fijada.
+- [x] **T04 — Generación de código a partir del contrato**
+  Configurar `openapi-generator-maven-plugin` 7.26.0 con la configuración exacta del plan §3.1 (paquetes `com.messaginglab.api` y `com.messaginglab.api.model`) y comprobar su compatibilidad con la versión de Spring Boot fijada.
   *RF:* RF-1 (CA-1.3)
   *Hecho cuando:* `./mvnw compile` genera `StatusApi` y `StatusResponse` en `target/generated-sources`, y el árbol de dependencias (`./mvnw dependency:tree`) no incluye Swagger ni `jackson-databind-nullable`.
 
-- [ ] **T05 — Versión y configuración del backend**
+- [x] **T05 — Versión y configuración del backend**
   Añadir el objetivo `build-info` de `spring-boot-maven-plugin` y escribir `application.properties` (`spring.application.name=messaging-lab`, `server.port=${BACKEND_PORT:8080}`, `spring.config.import=optional:file:../infra/.env[.properties]`).
   *RF:* RF-1 (CA-1.2, CA-1.4), RF-5 (CA-5.4)
   *Hecho cuando:* tras `./mvnw compile` existe `target/classes/META-INF/build-info.properties` con `build.version=0.1.0`. Sin `infra/.env`, la aplicación arranca en el 8080; con `BACKEND_PORT=8081` en `infra/.env`, arranca en el 8081.
 
-- [ ] **T06 — Dominio y servicio de estado**
+- [x] **T06 — Dominio y servicio de estado**
   Crear el record `model/ApplicationStatus` y `service/StatusService`, que construye el estado a partir de `BuildProperties`, junto con `StatusServiceTest`.
   *RF:* RF-1 (CA-1.1, CA-1.2), RF-7 (CA-7.1)
   *Hecho cuando:* `StatusServiceTest` pasa y verifica el estado `AVAILABLE`, el nombre y la versión tomados de `BuildProperties`.
 
-- [ ] **T07 — Controlador de estado**
+- [x] **T07 — Controlador de estado**
   Crear `controller/StatusController`, que implementa `StatusApi` y traduce `ApplicationStatus` a `StatusResponse`, junto con `StatusControllerTest` (MockMvc, capa web, servicio simulado).
   *RF:* RF-1 (CA-1.1), RF-7 (CA-7.1)
-  *Hecho cuando:* `StatusControllerTest` pasa y, con la aplicación arrancada, `curl localhost:8080/api/status` devuelve `{"status":"AVAILABLE","name":"messaging-lab","version":"0.1.0"}`.
+  *Hecho cuando:* `StatusControllerTest` pasa y, con la aplicación arrancada, `curl localhost:8080/api/status` devuelve `{"status":"AVAILABLE","name":"messaging-lab-backend","version":"0.1.0"}`.
 
-- [ ] **T08 — Prueba de contexto completo**
+- [x] **T08 — Prueba de contexto completo**
   Escribir `MessagingLabApplicationTests`: levanta el contexto completo, llama a `/api/status` y comprueba que la versión coincide con la de `BuildProperties`.
   *RF:* RF-1 (CA-1.2, CA-1.4), RF-7 (CA-7.1)
   *Hecho cuando:* `./mvnw test` pasa con las tres clases de prueba del backend.
 
-- [ ] **T09 — Dockerfile del backend**
+- [x] **T09 — Dockerfile del backend**
   Crear `backend/Dockerfile` (multietapa: `eclipse-temurin:21-jdk` → `eclipse-temurin:21-jre`, usuario sin privilegios, puerto 8080) y `backend/.dockerignore`.
   *RF:* RF-6
   *Hecho cuando:* `docker build -t ml-backend backend` termina bien y, con `docker run --rm -p 8080:8080 ml-backend`, `curl localhost:8080/api/status` devuelve la versión `0.1.0`.
@@ -133,7 +133,7 @@ Las tareas están en orden de dependencia. Cada una debe completarse, con su com
   - `frontend` con `build: ../frontend`, puertos `${FRONTEND_PORT:-4200}:80` y `depends_on: backend`.
   *RF:* RF-6 (CA-6.1–CA-6.5)
   *Hecho cuando:*
-  - con `docker compose -f infra/docker-compose.yml up -d --build`, en `http://localhost:4200` se ve «Disponible», `messaging-lab` y `0.1.0`;
+  - con `docker compose -f infra/docker-compose.yml up -d --build`, en `http://localhost:4200` se ve «Disponible», `messaging-lab-backend` y `0.1.0`;
   - con `FRONTEND_PORT=4300` en `infra/.env` funciona en el 4300;
   - `docker compose -f infra/docker-compose.yml down` deja `docker compose -f infra/docker-compose.yml ps` vacío.
 
@@ -151,7 +151,7 @@ Las tareas están en orden de dependencia. Cada una debe completarse, con su com
   *RF:* RF-8 (CA-8.1–CA-8.5) (RNF-1, RNF-2)
   *Hecho cuando:* el README tiene una sección para cada criterio CA-8.1 a CA-8.5 y todos sus comandos coinciden con los de AGENTS.md y el plan.
 
-- [ ] **T22 — `--build` en AGENTS.md** *(solo si se aprueba; ver plan §7)*
+- [x] **T22 — `--build` en AGENTS.md** *(aprobada el 2026-10-30; ver plan §7)*
   Añadir `--build` al comando de arranque de la infraestructura en AGENTS.md.
   *RF:* RF-6
   *Hecho cuando:* el comando de AGENTS.md coincide con el del README.

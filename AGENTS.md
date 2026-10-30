@@ -33,7 +33,7 @@ Mantén las responsabilidades de cada directorio y evita duplicar documentación
 - Tests backend: `cd backend && ./mvnw test`
 - Frontend: `cd frontend && npm start`
 - Tests frontend: `cd frontend && npm test`
-- Infraestructura: `docker compose -f infra/docker-compose.yml up -d`
+- Infraestructura: `docker compose -f infra/docker-compose.yml up -d --build`
 - Detener infraestructura: `docker compose -f infra/docker-compose.yml down`
 
 Ejecuta únicamente los comandos correspondientes a los módulos existentes y a las herramientas realmente configuradas. Si un comando no está disponible o requiere una configuración previa, indícalo sin asumir que ha funcionado.

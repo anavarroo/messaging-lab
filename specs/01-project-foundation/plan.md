@@ -1,6 +1,6 @@
 # Plan 01 — Base del proyecto
 
-- **Estado:** Propuesta pendiente de revisión
+- **Estado:** Aprobado
 - **Fecha:** 2026-10-29
 - **Especificación:** [spec.md](spec.md) (aprobada)
 
@@ -32,13 +32,26 @@ Navegador ──> Frontend (/, /status, ...) ──/api/*──> Backend (GET /a
 ## 3. Backend
 
 ### 3.1 Proyecto
-- Maven con Maven Wrapper (`./mvnw`), Java 21 y la última versión estable de Spring Boot en el momento de implementar, fijada en el `pom.xml`.
+- Maven con Maven Wrapper (`./mvnw`), Java 21 y Spring Boot 4.1.2 (la última versión estable al implementar), fijada en el `pom.xml`.
 - `groupId` `com.messaginglab`, `artifactId` `messaging-lab-backend`, versión inicial `0.1.0`.
-- **Dependencias** (justificación según RNF-6):
-  - `spring-boot-starter-web`: API REST.
+- **Dependencias** (justificación según RNF-6; nombres de Spring Boot 4, que modularizó los starters):
+  - `spring-boot-starter-webmvc`: API REST. Equivale al antiguo `spring-boot-starter-web`.
   - `spring-boot-starter-validation`: necesaria para las anotaciones de validación del código generado.
-  - `spring-boot-starter-test` (solo para pruebas).
-  - `openapi-generator-maven-plugin` (solo en tiempo de compilación). Se configura con `interfaceOnly=true`, `documentationProvider=none`, `annotationLibrary=none` y `openApiNullable=false` para no arrastrar dependencias de Swagger ni de `jackson-databind-nullable`.
+  - `spring-boot-starter-webmvc-test` (solo para pruebas). Equivale al antiguo `spring-boot-starter-test` y añade el soporte de pruebas de la capa web (JUnit, Mockito, MockMvc). No se incluye `spring-boot-starter-validation-test`, porque esta funcionalidad no lo necesita.
+  - `openapi-generator-maven-plugin` 7.26.0 (solo en tiempo de compilación; versión en la propiedad `openapi-generator.version`). Usa el generador `spring` con `inputSpec` `${project.basedir}/api/api.yml`, `apiPackage` `com.messaginglab.api` y `modelPackage` `com.messaginglab.api.model`. Opciones (`configOptions`):
+
+    | Opción | Valor | Motivo |
+    |--------|-------|--------|
+    | `interfaceOnly` | `true` | Solo genera la interfaz y los modelos; el controlador propio la implementa. |
+    | `useSpringBoot4` | `true` | Código compatible con Spring Boot 4. |
+    | `useJackson3` | `true` | Alinea el código generado con Jackson 3 (`tools.jackson`), el que usa Spring Boot 4. |
+    | `useJspecify` | `true` | Anotaciones de nulabilidad de JSpecify en lugar de `org.springframework.lang.Nullable`, obsoleta en Spring 7. JSpecify ya llega de forma transitiva con Spring. |
+    | `useTags` | `true` | Agrupa las operaciones por etiqueta, de modo que la interfaz se llama `StatusApi`. |
+    | `documentationProvider` | `none` | Evita la dependencia de springdoc/Swagger UI. |
+    | `annotationLibrary` | `none` | Evita la dependencia de las anotaciones de Swagger. |
+    | `openApiNullable` | `false` | Evita la dependencia de `jackson-databind-nullable`. |
+    | `generateJsonIncludeAnnotations` | `false` | Mantiene el comportamiento por defecto y silencia el aviso del generador. |
+    | `generateJsonSetterNullsAnnotations` | `false` | Mantiene el comportamiento por defecto y silencia el aviso del generador. |
 - `spring-boot-maven-plugin` con el objetivo `build-info`. Genera los metadatos de compilación a partir del `pom.xml` y es la fuente única de la versión (CA-1.2). Ese objetivo se ejecuta tanto en `spring-boot:run` como en el empaquetado, por lo que la versión es la misma en local y en contenedores (CA-1.4).
 
 ### 3.2 Contrato — `backend/api/api.yml`
@@ -156,7 +169,7 @@ frontend/src/app/
   - puertos por defecto.
 
   Cubre CA-8.1 a CA-8.5 y RNF-2.
-- **`AGENTS.md`** no necesita cambios estructurales. Solo se propone añadir `--build` al comando de arranque de la infraestructura para que las imágenes de backend y frontend se reconstruyan al cambiar el código. Requiere tu aprobación.
+- **`AGENTS.md`** no necesita cambios estructurales. Se añade `--build` al comando de arranque de la infraestructura para que las imágenes de backend y frontend se reconstruyan al cambiar el código. Aprobado el 2026-10-30.
 
 ## 8. Trazabilidad
 
@@ -176,7 +189,7 @@ frontend/src/app/
 ## 9. Verificación final
 
 1. `cd backend && ./mvnw test` y `cd frontend && npm test` pasan.
-2. Local: `./mvnw spring-boot:run` + `npm start` → en `http://localhost:4200` se ve «Disponible», `messaging-lab` y `0.1.0`.
+2. Local: `./mvnw spring-boot:run` + `npm start` → en `http://localhost:4200` se ve «Disponible», `messaging-lab-backend` y `0.1.0`.
 3. Se para el backend, se pulsa «Reintentar» y aparece el error; se arranca el backend, se pulsa «Reintentar» y aparece el estado.
 4. Se cambian los puertos en `infra/.env` y se repite el paso 2 con los nuevos puertos.
 5. Desde la raíz, `docker compose -f infra/docker-compose.yml up -d --build` → en `http://localhost:4200` se ve la misma versión; `docker compose -f infra/docker-compose.yml down` lo detiene todo.
@@ -185,5 +198,5 @@ frontend/src/app/
 
 ## 10. Riesgos
 
-- **Versiones:** el plugin de OpenAPI Generator debe ser compatible con la versión de Spring Boot elegida (opción `useSpringBoot3` o equivalente). Se comprobará al fijar las versiones.
+- **Versiones:** resuelto en T04. OpenAPI Generator 7.26.0 es compatible con Spring Boot 4.1.2 mediante `useSpringBoot4` y `useJackson3` (ver §3.1). Al actualizar cualquiera de los dos, hay que comprobar de nuevo la compatibilidad.
 - **Node:** `process.loadEnvFile` necesita Node ≥ 20.12. Angular 21 ya exige una versión superior, así que no añade restricciones.

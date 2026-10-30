@@ -1,0 +1,49 @@
+openapi: 3.0.3
+info:
+  title: messaging-lab API
+  description: API REST del backend de messaging-lab.
+  version: 0.1.0
+servers:
+  - url: /
+tags:
+  - name: Status
+    description: Estado del backend.
+paths:
+  /api/status:
+    get:
+      tags:
+        - Status
+      operationId: getStatus
+      summary: Consulta el estado del backend
+      description: Devuelve el estado del backend, el nombre de la aplicación y su versión.
+      responses:
+        '200':
+          description: El backend está disponible.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatusResponse'
+components:
+  schemas:
+    StatusResponse:
+      type: object
+      description: Estado, nombre y versión del backend.
+      required:
+        - status
+        - name
+        - version
+      properties:
+        status:
+          type: string
+          description: Estado del backend.
+          enum:
+            - AVAILABLE
+          example: AVAILABLE
+        name:
+          type: string
+          description: Nombre de la aplicación.
+          example: messaging-lab-backend
+        version:
+          type: string
+          description: Versión del backend.
+          example: 0.1.0
