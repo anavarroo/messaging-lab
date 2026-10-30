@@ -57,27 +57,27 @@ Las tareas están en orden de dependencia. Cada una debe completarse, con su com
 
 ## Fase 2 — Frontend
 
-- [ ] **T10 — Esqueleto Angular 21**
+- [x] **T10 — Esqueleto Angular 21**
   Generar `frontend/` con Angular CLI 21: standalone, zoneless, CSS, sin SSR, con Vitest como ejecutor de pruebas.
   *RF:* RF-5
   *Hecho cuando:* `cd frontend && npm test` pasa con la prueba inicial y `npx ng build` termina sin errores.
 
-- [ ] **T11 — Arranque local con proxy y puertos**
-  Crear `scripts/serve.mjs` (carga `../infra/.env` con `process.loadEnvFile` si existe y lanza `ng serve --port ${FRONTEND_PORT:-4200} --proxy-config proxy.conf.mjs`) y `proxy.conf.mjs` (`/api` → `http://localhost:${BACKEND_PORT:-8080}`). Hacer que `npm start` lo ejecute.
+- [x] **T11 — Arranque local con proxy y puertos**
+  Crear `scripts/serve.mjs` (carga `../infra/.env` con `process.loadEnvFile` si existe y lanza `ng serve --port ${FRONTEND_PORT:-4200}`) y `proxy.conf.mjs` (`/api` → `http://localhost:${BACKEND_PORT:-8080}`). Registrar el proxy en `angular.json` (`serve.options.proxyConfig`) y hacer que `npm start` ejecute el script.
   *RF:* RF-5 (CA-5.2, CA-5.3, CA-5.4)
   *Hecho cuando:* con el backend arrancado, `npm start` sirve en el 4200 y `curl localhost:4200/api/status` devuelve el JSON del backend. Con `BACKEND_PORT=8081` y `FRONTEND_PORT=4300` en `infra/.env` (y el backend reiniciado), `curl localhost:4300/api/status` también funciona.
 
-- [ ] **T12 — Modelo y validación de la respuesta**
-  Crear `core/status/backend-status.ts` con el tipo `BackendStatus` y la función `isBackendStatus()`, junto con sus pruebas.
+- [x] **T12 — Modelo y validación de la respuesta**
+  Crear `core/status/backend-status.ts` con el tipo `BackendStatus` y la función `isBackendStatus()`, junto con sus pruebas. La validación es más estricta que el contrato: un `name` o una `version` vacíos se tratan como respuesta no válida.
   *RF:* RF-3 (CA-3.2), RF-7
   *Hecho cuando:* las pruebas pasan y cubren una respuesta válida, una sin `version`, una con `status` desconocido y un valor que no es un objeto.
 
-- [ ] **T13 — Servicio `StatusApiService`**
+- [x] **T13 — Servicio `StatusApiService`**
   Implementar `GET /api/status` con `timeout(20000)` y clasificar los errores según el plan §4.3 («no disponible» frente a «no se ha podido obtener»), junto con sus pruebas (`HttpTestingController`, temporizadores simulados).
   *RF:* RF-2 (CA-2.1), RF-3 (CA-3.1, CA-3.2), RF-7 (CA-7.4) (RNF-4)
   *Hecho cuando:* `status-api.service.spec` pasa y cubre éxito, respuesta incompleta, 500, 502, error de red (HTTP 0) y *timeout* a los 20 s.
 
-- [ ] **T14 — Vista de estado**
+- [x] **T14 — Vista de estado**
   Crear `features/status/status-page`:
   - una signal con los casos `loading`, `success` y `error`;
   - indicador de carga;
@@ -88,7 +88,7 @@ Las tareas están en orden de dependencia. Cada una debe completarse, con su com
   *RF:* RF-2 (CA-2.1–CA-2.3), RF-3 (CA-3.3–CA-3.6) (RNF-8)
   *Hecho cuando:* el componente compila y `npx ng build` termina sin errores. El comportamiento se verifica en T15.
 
-- [ ] **T15 — Pruebas de la vista de estado**
+- [x] **T15 — Pruebas de la vista de estado**
   Escribir `status-page.spec` con el servicio simulado.
   *RF:* RF-7 (CA-7.2, CA-7.3)
   *Hecho cuando:* `npm test` pasa con casos para:
@@ -98,7 +98,7 @@ Las tareas están en orden de dependencia. Cada una debe completarse, con su com
   - reintento con éxito que sustituye al error;
   - botón deshabilitado mientras hay una consulta en curso.
 
-- [ ] **T16 — Secciones del menú y *shell***
+- [x] **T16 — Secciones del menú y *shell***
   Crear `layout/nav-sections.ts` con «Estado» y las tres secciones futuras con sus descripciones (spec CA-4.2), y `layout/shell` con:
   - cabecera con el nombre del laboratorio;
   - menú con las secciones futuras marcadas con `aria-disabled="true"`;
@@ -107,7 +107,7 @@ Las tareas están en orden de dependencia. Cada una debe completarse, con su com
   *RF:* RF-4 (CA-4.1, CA-4.2, CA-4.3, CA-4.5)
   *Hecho cuando:* el *shell* compila y `npx ng build` termina sin errores. El comportamiento se verifica en T17.
 
-- [ ] **T17 — Pruebas del *shell***
+- [x] **T17 — Pruebas del *shell***
   Escribir `shell.spec`.
   *RF:* RF-4, RF-7
   *Hecho cuando:* `npm test` pasa y verifica:
@@ -115,19 +115,19 @@ Las tareas están en orden de dependencia. Cada una debe completarse, con su com
   - las tres secciones deshabilitadas con su descripción;
   - que al activar una se muestra «Disponible próximamente» sin cambiar la URL.
 
-- [ ] **T18 — Rutas**
+- [x] **T18 — Rutas**
   Configurar `app.routes.ts` (`''` → `status`, `status` → vista de estado, `**` → `status`) y montar el *shell* en `App`, junto con las pruebas de rutas.
   *RF:* RF-2 (CA-2.1), RF-4 (CA-4.4)
   *Hecho cuando:* `npm test` pasa con una prueba que navega a `/no-existe` y acaba en `/status`.
 
-- [ ] **T19 — Dockerfile del frontend**
+- [x] **T19 — Dockerfile del frontend**
   Crear `frontend/Dockerfile` (multietapa: `node` LTS Alpine → `nginx` Alpine), `frontend/nginx.conf` (`/api/` → `http://backend:8080`, `try_files $uri /index.html`) y `frontend/.dockerignore`.
   *RF:* RF-6
   *Hecho cuando:* `docker build -t ml-frontend frontend` termina bien. La comunicación con el backend se verifica en T20.
 
 ## Fase 3 — Infraestructura
 
-- [ ] **T20 — Docker Compose**
+- [x] **T20 — Docker Compose**
   Crear `infra/docker-compose.yml`:
   - `backend` con `build: ../backend` y puertos `${BACKEND_PORT:-8080}:8080`;
   - `frontend` con `build: ../frontend`, puertos `${FRONTEND_PORT:-4200}:80` y `depends_on: backend`.

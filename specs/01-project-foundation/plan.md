@@ -111,7 +111,7 @@ frontend/src/app/
 | Situación | Mensaje |
 |-----------|---------|
 | Más de 20 s sin respuesta, error de red (HTTP 0) o el proxy no alcanza el backend (502, 503, 504) | «El backend no está disponible.» |
-| Otro error HTTP o respuesta que no supera `isBackendStatus()` (por ejemplo, sin `version`) | «No se ha podido obtener el estado del backend.» |
+| Otro error HTTP o respuesta que no supera `isBackendStatus()` (por ejemplo, sin `version`, o con `name` o `version` vacíos) | «No se ha podido obtener el estado del backend.» |
 
 - **Reintentar (CA-3.3 a CA-3.6):** el botón vuelve a lanzar la consulta sin recargar la página y está deshabilitado mientras la vista está en `loading`.
 - **Accesibilidad (RNF-8):** la zona de estado usa `aria-live="polite"` y el error `role="alert"`. El botón es un `<button>` nativo, así que se puede activar con el teclado.
@@ -120,16 +120,17 @@ frontend/src/app/
 ### 4.4 Desarrollo local y puertos
 - `npm start` ejecuta `frontend/scripts/serve.mjs`, un script de unas pocas líneas sin dependencias. Hace tres cosas:
   1. Carga `../infra/.env` si existe, con `process.loadEnvFile`, que es nativo de Node.
-  2. Arranca `ng serve --port ${FRONTEND_PORT:-4200} --proxy-config proxy.conf.mjs`.
-  3. Hace que `proxy.conf.mjs` reenvíe `/api` a `http://localhost:${BACKEND_PORT:-8080}`.
+  2. Arranca `ng serve --port ${FRONTEND_PORT:-4200}`. El proxy no se pasa como argumento: está registrado en `angular.json` (`serve.options.proxyConfig`), de modo que también se aplica si alguien ejecuta `ng serve` directamente.
+  3. Hace que `proxy.conf.mjs` reenvíe `/api` a `http://localhost:${BACKEND_PORT:-8080}`. Lee `BACKEND_PORT` de las variables de entorno, que el paso 1 ha rellenado a partir de `infra/.env`.
 - Así, cambiar `BACKEND_PORT` en `infra/.env` ajusta a la vez el backend y el proxy, y CL-9 no se produce en local.
 
 ### 4.5 Dockerfile — `frontend/Dockerfile`
-- Multietapa: compila con `node` LTS (Alpine) usando `npm ci` y `ng build`, y sirve con `nginx` (Alpine).
+- Multietapa: compila con `node:24-alpine` (LTS) usando `npm ci` y `ng build`, y sirve con `nginx:alpine`. Escucha en el puerto 80 dentro del contenedor.
 - `frontend/nginx.conf`:
-  - `location /api/` hace `proxy_pass` a `http://backend:8080`.
-  - `location /` hace `try_files $uri /index.html` para que las rutas de Angular funcionen al recargar.
-- `frontend/.dockerignore` excluye `node_modules/`, `dist/` y `.angular/`.
+  - `location /api/` hace `proxy_pass` al backend (`http://backend:8080`). El nombre se resuelve **en cada petición** con el DNS interno de Docker (`resolver 127.0.0.11 valid=10s` y el destino guardado en una variable con `set $backend ...`), no una sola vez al arrancar. Así nginx arranca aunque el backend todavía no esté listo, no se queda con una IP obsoleta si el backend se recrea, y mientras el backend no responde devuelve 502, que la interfaz muestra como «El backend no está disponible.» (CA-6.4, CL-2).
+  - `location = /index.html` añade `Cache-Control: no-cache`, para que una versión nueva se vea al recargar.
+  - `location /` hace `try_files $uri /index.html` para que las rutas de Angular funcionen al recargar. Una consecuencia aceptada es que un archivo estático inexistente también devuelve `index.html` con 200 en lugar de 404.
+- `frontend/.dockerignore` excluye `node_modules/`, `dist/`, `.angular/`, `coverage/` y los archivos del IDE y del sistema.
 
 ## 5. Arranque completo y configuración
 
