@@ -139,7 +139,7 @@ Las tareas están en orden de dependencia. Cada una debe completarse, con su com
 
 ## Fase 4 — Documentación
 
-- [ ] **T21 — README**
+- [x] **T21 — README**
   Redactar `README.md` en español con:
   - requisitos previos;
   - configuración de puertos (`infra/.env.example` → `infra/.env`) y qué ajustar para que el frontend siga encontrando el backend (CL-9);
@@ -158,12 +158,12 @@ Las tareas están en orden de dependencia. Cada una debe completarse, con su com
 
 ## Fase 5 — Validación
 
-- [ ] **T23 — Pruebas automatizadas completas**
+- [x] **T23 — Pruebas automatizadas completas** *(cerrada por decisión del usuario el 2026-10-30, sin ejecutar esta verificación final)*
   Ejecutar `cd backend && ./mvnw test` y `cd frontend && npm test` sin el otro componente en marcha.
   *RF:* RF-7 (CA-7.1–CA-7.4)
   *Hecho cuando:* las dos ejecuciones terminan sin fallos y su resultado se ha anotado.
 
-- [ ] **T24 — Verificación manual en local (Chrome)**
+- [x] **T24 — Verificación manual en local (Chrome)** *(cerrada por decisión del usuario el 2026-10-30, sin ejecutar esta verificación final)*
   Seguir los pasos 2, 3, 4 y 6 de la verificación del plan (§9) en la última versión estable de Chrome.
   *RF:* RF-2, RF-3, RF-4, RF-5 (RNF-8, RNF-9)
   *Hecho cuando:*
@@ -172,7 +172,7 @@ Las tareas están en orden de dependencia. Cada una debe completarse, con su com
   - la redirección de rutas desconocidas y las secciones deshabilitadas se comportan según la spec;
   - el botón «Reintentar» se activa con el teclado.
 
-- [ ] **T25 — Verificación desde un clon limpio**
+- [x] **T25 — Verificación desde un clon limpio** *(cerrada por decisión del usuario el 2026-10-30, sin ejecutar esta verificación final)*
   Clonar el repositorio en un directorio temporal y seguir solo el README para levantar las dos formas de arranque y pararlas.
   *RF:* RF-6, RF-8 (RNF-2); criterios de finalización 2, 3 y 6
   *Hecho cuando:* las dos formas de arranque muestran la misma versión (`0.1.0`) sin pasos que no estén en el README, y se ha comprobado cada criterio de finalización de la spec.
