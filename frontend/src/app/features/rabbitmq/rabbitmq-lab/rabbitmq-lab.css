@@ -1,0 +1,96 @@
+h2 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+}
+
+.connection p {
+  margin: 0 0 0.75rem;
+}
+
+.connected {
+  color: #1b7a3a;
+  font-weight: 600;
+}
+
+.version {
+  color: #555;
+  font-weight: 400;
+}
+
+.loading {
+  color: #555;
+}
+
+.error {
+  padding: 0.75rem 1rem;
+  border-left: 4px solid #b3261e;
+  background: #fdecea;
+  color: #7a1712;
+}
+
+.retry {
+  margin-bottom: 1rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #1f4fd8;
+  border-radius: 4px;
+  background: #1f4fd8;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+.retry:disabled {
+  border-color: #aaa;
+  background: #aaa;
+  cursor: not-allowed;
+}
+
+.tabs ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0 0 1rem;
+  padding: 0;
+  border-bottom: 1px solid #ddd;
+  list-style: none;
+}
+
+.tabs a {
+  display: block;
+  padding: 0.5rem 1rem;
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 4px 4px 0 0;
+  color: #1f4fd8;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.tabs a.active {
+  border-color: #ddd;
+  background: #e8eefc;
+}
+
+.tabs a.disabled {
+  color: #6b6b6b;
+  cursor: not-allowed;
+}
+
+.disabled-note {
+  margin: 0 0 1rem;
+  color: #7a4b00;
+  font-weight: 600;
+}
+
+.area {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+a:focus-visible,
+.retry:focus-visible {
+  outline: 3px solid #f2a900;
+  outline-offset: 2px;
+}

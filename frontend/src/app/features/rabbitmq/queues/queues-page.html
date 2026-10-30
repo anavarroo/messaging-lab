@@ -1,0 +1,145 @@
+<section class="queues" aria-labelledby="queues-title">
+  <h3 id="queues-title">Colas</h3>
+  <p class="intro">
+    Una cola guarda los mensajes hasta que un consumidor los procesa. Una dead-letter queue recibe los mensajes
+    que otra cola rechaza sin reencolar.
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="create()" novalidate class="create">
+    <h4>Crear una cola</h4>
+
+    <div class="field">
+      <label for="queue-name">Nombre</label>
+      <input
+        id="queue-name"
+        type="text"
+        formControlName="name"
+        autocomplete="off"
+        [attr.aria-invalid]="nameError() && showErrors() ? 'true' : null"
+        aria-describedby="queue-name-error"
+      />
+      <p id="queue-name-error" class="field-error" role="alert">
+        @if (nameError(); as message) {
+          @if (showErrors()) {
+            {{ message }}
+          }
+        }
+      </p>
+    </div>
+
+    <div class="field">
+      <label for="queue-dlq">Dead-letter queue (opcional)</label>
+      <select
+        id="queue-dlq"
+        formControlName="deadLetterQueue"
+        aria-describedby="queue-dlq-help queue-dlq-error"
+        [attr.aria-invalid]="ownDeadLetterQueueError() && showErrors() ? 'true' : null"
+      >
+        <option value="">Sin dead-letter queue</option>
+        @for (name of names(); track name) {
+          <option [value]="name">{{ name }}</option>
+        }
+      </select>
+      <p id="queue-dlq-help" class="help">
+        Elige entre las colas existentes. Los mensajes rechazados sin reencolar irán a ella.
+      </p>
+      <p id="queue-dlq-error" class="field-error" role="alert">
+        @if (ownDeadLetterQueueError(); as message) {
+          @if (showErrors()) {
+            {{ message }}
+          }
+        }
+      </p>
+    </div>
+
+    <button type="submit" [disabled]="busy()">Crear cola</button>
+  </form>
+
+  <div class="feedback" aria-live="polite">
+    @if (notice(); as message) {
+      <p class="notice">{{ message }}</p>
+    }
+  </div>
+  @if (actionError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  <div class="list-header">
+    <h4>Colas existentes</h4>
+    <button type="button" class="secondary" (click)="reload()" [disabled]="loading()">Actualizar</button>
+  </div>
+  <p class="help">Los contadores se actualizan al pulsar «Actualizar» y tras cada operación.</p>
+
+  @if (loadError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  @if (queues(); as list) {
+    @if (list.length === 0) {
+      <p class="empty">Todavía no hay colas.</p>
+    } @else {
+      <table>
+        <caption class="visually-hidden">
+          Colas existentes en RabbitMQ
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Nombre</th>
+            <th scope="col">Dead-letter queue</th>
+            <th scope="col" class="number">Listos</th>
+            <th scope="col" class="number">Pendientes de confirmar</th>
+            <th scope="col" class="number">Total</th>
+            <th scope="col"><span class="visually-hidden">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (queue of list; track queue.name) {
+            <tr>
+              <td class="name">{{ queue.name }}</td>
+              <td class="name">{{ queue.deadLetterQueue || '—' }}</td>
+              <td class="number">{{ queue.ready }}</td>
+              <td class="number">{{ queue.unacknowledged }}</td>
+              <td class="number">{{ queue.total }}</td>
+              <td class="actions">
+                <button
+                  type="button"
+                  class="secondary"
+                  [attr.aria-label]="'Inspeccionar los mensajes de la cola ' + queue.name"
+                  (click)="inspect(queue)"
+                >
+                  Inspeccionar
+                </button>
+                <button
+                  type="button"
+                  class="secondary"
+                  [disabled]="busy()"
+                  [attr.aria-label]="'Vaciar la cola ' + queue.name"
+                  (click)="purge(queue)"
+                >
+                  Vaciar
+                </button>
+                <button
+                  type="button"
+                  class="danger"
+                  [disabled]="busy()"
+                  [attr.aria-label]="'Eliminar la cola ' + queue.name"
+                  (click)="remove(queue)"
+                >
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  } @else if (loading()) {
+    <p class="loading">Cargando las colas…</p>
+  }
+
+  @if (inspected(); as queue) {
+    <app-queue-messages-panel [queue]="queue" (closed)="inspected.set(null)" />
+  }
+
+  <app-confirm-dialog />
+</section>

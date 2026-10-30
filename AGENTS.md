@@ -14,7 +14,7 @@ El contrato OpenAPI de la API REST se encuentra en `backend`. La infraestructura
 
 - `backend/`: aplicación Spring Boot, pruebas y contrato OpenAPI.
 - `frontend/`: aplicación Angular, componentes, servicios y pruebas.
-- `infra/`: Docker Compose y configuración de los servicios de infraestructura.
+- `infra/`: Docker Compose (RabbitMQ, backend y frontend) y plantilla de configuración local.
 - `specs/`: especificaciones organizadas por funcionalidad o hito.
 - `docs/`: constitución y documentación general del proyecto.
 - `AGENTS.md`: instrucciones generales para los agentes de IA.
@@ -31,10 +31,13 @@ Mantén las responsabilidades de cada directorio y evita duplicar documentación
 
 - Backend: `cd backend && ./mvnw spring-boot:run`
 - Tests backend: `cd backend && ./mvnw test`
+- Tests de integración backend: `cd backend && ./mvnw verify` (requiere Docker en marcha)
 - Frontend: `cd frontend && npm start`
 - Tests frontend: `cd frontend && npm test`
 - Infraestructura: `docker compose -f infra/docker-compose.yml up -d --build`
+- Solo RabbitMQ: `docker compose -f infra/docker-compose.yml up -d rabbitmq`
 - Detener infraestructura: `docker compose -f infra/docker-compose.yml down`
+- Detener infraestructura y borrar sus datos: `docker compose -f infra/docker-compose.yml down -v`
 
 Ejecuta únicamente los comandos correspondientes a los módulos existentes y a las herramientas realmente configuradas. Si un comando no está disponible o requiere una configuración previa, indícalo sin asumir que ha funcionado.
 

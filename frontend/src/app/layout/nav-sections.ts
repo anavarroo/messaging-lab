@@ -8,12 +8,7 @@ export interface NavSection {
 
 export const NAV_SECTIONS: readonly NavSection[] = [
   { label: 'Estado', enabled: true, path: '/status' },
-  {
-    label: 'Laboratorio RabbitMQ',
-    enabled: false,
-    description:
-      'Colas, exchanges, bindings, routing keys, publicación, acknowledgements y dead-letter queues.',
-  },
+  { label: 'Laboratorio RabbitMQ', enabled: true, path: '/rabbitmq' },
   {
     label: 'Laboratorio Kafka',
     enabled: false,

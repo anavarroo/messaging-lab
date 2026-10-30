@@ -6,13 +6,11 @@ import { Shell } from './shell';
 @Component({ template: '<p>Contenido de estado</p>' })
 class StatusStub {}
 
+@Component({ template: '<p>Contenido del laboratorio</p>' })
+class LabStub {}
+
 describe('Shell', () => {
   const disabledSections = [
-    {
-      label: 'Laboratorio RabbitMQ',
-      description:
-        'Colas, exchanges, bindings, routing keys, publicación, acknowledgements y dead-letter queues.',
-    },
     {
       label: 'Laboratorio Kafka',
       description: 'Topics, particiones, offsets, productores, consumer groups y lag.',
@@ -31,7 +29,12 @@ describe('Shell', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [Shell],
-      providers: [provideRouter([{ path: 'status', component: StatusStub }])],
+      providers: [
+        provideRouter([
+          { path: 'status', component: StatusStub },
+          { path: 'rabbitmq', component: LabStub },
+        ]),
+      ],
     }).compileComponents();
 
     router = TestBed.inject(Router);
@@ -48,6 +51,10 @@ describe('Shell', () => {
 
   const disabledButtons = () =>
     Array.from(page.querySelectorAll<HTMLButtonElement>('button[aria-disabled="true"]'));
+  const navLink = (label: string) =>
+    Array.from(page.querySelectorAll<HTMLAnchorElement>('nav a')).find((link) =>
+      link.textContent?.includes(label),
+    ) as HTMLAnchorElement;
   const notice = () => page.querySelector('[role="status"]')?.textContent?.trim();
 
   it('shows the lab name in the header', () => {
@@ -59,7 +66,7 @@ describe('Shell', () => {
   });
 
   it('shows the status section as an active link', () => {
-    const link = page.querySelector<HTMLAnchorElement>('nav a');
+    const link = navLink('Estado');
 
     expect(link?.textContent).toContain('Estado');
     expect(link?.getAttribute('href')).toBe('/status');
@@ -67,7 +74,36 @@ describe('Shell', () => {
     expect(link?.getAttribute('aria-current')).toBe('page');
   });
 
-  it('shows the three future sections disabled with their description', () => {
+  it('shows the RabbitMQ lab as an enabled link to /rabbitmq (CA-3.1)', () => {
+    const link = navLink('Laboratorio RabbitMQ');
+
+    expect(link.tagName).toBe('A');
+    expect(link.getAttribute('href')).toBe('/rabbitmq');
+    expect(link.hasAttribute('aria-disabled')).toBe(false);
+    expect(
+      disabledButtons().some((button) => button.textContent?.includes('Laboratorio RabbitMQ')),
+    ).toBe(false);
+  });
+
+  it('navigates to the RabbitMQ lab and marks the section as active (CA-3.1, CA-3.4)', async () => {
+    navLink('Laboratorio RabbitMQ').click();
+    await settle();
+
+    expect(router.url).toBe('/rabbitmq');
+    expect(page.querySelector('main')?.textContent).toContain('Contenido del laboratorio');
+    expect(navLink('Laboratorio RabbitMQ').classList).toContain('active');
+    expect(navLink('Laboratorio RabbitMQ').getAttribute('aria-current')).toBe('page');
+    expect(navLink('Estado').classList).not.toContain('active');
+  });
+
+  it('keeps only the Kafka lab and the flow visualizer disabled (CA-3.2)', () => {
+    expect(disabledButtons().map((button) => button.querySelector('.label')?.textContent)).toEqual([
+      'Laboratorio Kafka',
+      'Visualizador de flujo',
+    ]);
+  });
+
+  it('shows the two future sections disabled with their description', () => {
     const buttons = disabledButtons();
 
     expect(buttons).toHaveLength(disabledSections.length);

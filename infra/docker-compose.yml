@@ -1,11 +1,50 @@
 name: messaging-lab
 
 services:
+  rabbitmq:
+    image: rabbitmq:4.4-management
+    # El nombre del nodo de RabbitMQ depende del hostname. Fijarlo permite que los datos del volumen
+    # se reutilicen al recrear el contenedor (por ejemplo, tras "down" y "up").
+    hostname: rabbitmq
+    ports:
+      # Solo accesibles desde la máquina local. Puertos configurables en infra/.env;
+      # dentro del contenedor son siempre el 5672 (AMQP) y el 15672 (gestión y consola web).
+      - "127.0.0.1:${RABBITMQ_PORT:-5672}:5672"
+      - "127.0.0.1:${RABBITMQ_MANAGEMENT_PORT:-15672}:15672"
+    environment:
+      # Credenciales públicas de RabbitMQ por defecto, solo válidas en local (el servicio no sale de esta máquina)
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    volumes:
+      # Conserva exchanges, colas, bindings y mensajes. "down -v" lo elimina.
+      - rabbitmq-data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
   backend:
     build: ../backend
     ports:
       # Puerto publicado en la máquina (configurable en infra/.env); dentro del contenedor es siempre el 8080
       - "${BACKEND_PORT:-8080}:8080"
+    environment:
+      # Dentro de la red de Compose el backend usa siempre los puertos internos de RabbitMQ;
+      # RABBITMQ_PORT y RABBITMQ_MANAGEMENT_PORT de infra/.env solo cambian los puertos publicados en tu máquina.
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: "5672"
+      RABBITMQ_MANAGEMENT_PORT: "15672"
+      RABBITMQ_USER: ${RABBITMQ_USER:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      # Cada cuánto envía el backend un latido por el flujo de eventos de los consumidores
+      HEARTBEAT_INTERVAL: ${HEARTBEAT_INTERVAL:-15s}
+    # Solo garantiza que el nombre "rabbitmq" exista. No espera a que RabbitMQ esté sano: el backend debe
+    # arrancar aunque RabbitMQ tarde, y conectarse cuando esté listo.
+    depends_on:
+      rabbitmq:
+        condition: service_started
 
   frontend:
     build: ../frontend
@@ -16,3 +55,6 @@ services:
     # esté listo: si la interfaz carga antes, muestra el error y permite reintentar.
     depends_on:
       - backend
+
+volumes:
+  rabbitmq-data:

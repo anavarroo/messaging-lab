@@ -27,8 +27,22 @@
 			<artifactId>spring-boot-starter-webmvc</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>com.rabbitmq</groupId>
+			<artifactId>amqp-client</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-rabbitmq</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testcontainers</groupId>
+			<artifactId>testcontainers-junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
@@ -46,6 +60,11 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- Ejecuta las pruebas de integración (*IT, contra RabbitMQ real) en "verify"; "test" no las ejecuta -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-failsafe-plugin</artifactId>
+			</plugin>
 			<plugin>
 				<groupId>org.openapitools</groupId>
 				<artifactId>openapi-generator-maven-plugin</artifactId>
@@ -60,6 +79,10 @@
 							<generatorName>spring</generatorName>
 							<apiPackage>com.messaginglab.api</apiPackage>
 							<modelPackage>com.messaginglab.api.model</modelPackage>
+							<!-- el flujo de eventos se implementa con SseEmitter, no con un modelo generado -->
+							<schemaMappings>
+								<schemaMapping>ConsumerEventStream=org.springframework.web.servlet.mvc.method.annotation.SseEmitter</schemaMapping>
+							</schemaMappings>
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>
 								<useSpringBoot4>true</useSpringBoot4>

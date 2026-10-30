@@ -8,6 +8,22 @@ servers:
 tags:
   - name: Status
     description: Estado del backend.
+  - name: RabbitMqConnection
+    description: Conexión del backend con RabbitMQ.
+  - name: RabbitMqExchanges
+    description: Exchanges de RabbitMQ.
+  - name: RabbitMqQueues
+    description: Colas de RabbitMQ.
+  - name: RabbitMqBindings
+    description: Bindings entre exchanges y colas de RabbitMQ.
+  - name: RabbitMqQueueMessages
+    description: Inspección y vaciado de los mensajes de una cola.
+  - name: RabbitMqSessionEvents
+    description: Flujo de eventos en tiempo real de una sesión (una pestaña del navegador).
+  - name: RabbitMqConsumers
+    description: Consumidores interactivos de una sesión y resolución de sus mensajes.
+  - name: RabbitMqPublications
+    description: Publicación de mensajes en RabbitMQ.
 paths:
   /api/status:
     get:
@@ -23,8 +39,623 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/StatusResponse'
+  /api/rabbitmq/status:
+    get:
+      tags:
+        - RabbitMqConnection
+      operationId: getRabbitMqStatus
+      summary: Consulta si el backend puede comunicarse con RabbitMQ
+      description: Devuelve CONNECTED y la versión de RabbitMQ cuando el backend puede comunicarse con él.
+      responses:
+        '200':
+          description: El backend puede comunicarse con RabbitMQ.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RabbitMqStatusResponse'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+  /api/rabbitmq/exchanges:
+    get:
+      tags:
+        - RabbitMqExchanges
+      operationId: listExchanges
+      summary: Lista los exchanges
+      description: >-
+        Devuelve los exchanges de tipo direct, fanout y topic que existen en RabbitMQ. Los predefinidos
+        (el exchange por defecto y los que empiezan por «amq.») se marcan y no se pueden eliminar.
+      responses:
+        '200':
+          description: Exchanges existentes, primero los creados por el usuario.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Exchange'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+    post:
+      tags:
+        - RabbitMqExchanges
+      operationId: createExchange
+      summary: Crea un exchange
+      description: >-
+        Crea un exchange durable. Si ya existe uno idéntico no lo duplica y lo indica con created=false;
+        si existe con otro tipo, responde con un conflicto.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateExchangeRequest'
+      responses:
+        '200':
+          description: Ya existía un exchange idéntico; no se ha duplicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeCreationResponse'
+        '201':
+          description: Exchange creado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExchangeCreationResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+    delete:
+      tags:
+        - RabbitMqExchanges
+      operationId: deleteExchange
+      summary: Elimina un exchange
+      description: Elimina el exchange y todos sus bindings. No se pueden eliminar los exchanges predefinidos.
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: Nombre del exchange. Va como parámetro de consulta porque puede contener caracteres como «/».
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Exchange eliminado.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+  /api/rabbitmq/queues:
+    get:
+      tags:
+        - RabbitMqQueues
+      operationId: listQueues
+      summary: Lista las colas con sus contadores
+      description: >-
+        Devuelve las colas que existen en RabbitMQ, con su dead-letter queue si la tienen y el número de
+        mensajes listos, pendientes de confirmar y totales.
+      responses:
+        '200':
+          description: Colas existentes, ordenadas por nombre.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Queue'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+    post:
+      tags:
+        - RabbitMqQueues
+      operationId: createQueue
+      summary: Crea una cola
+      description: >-
+        Crea una cola durable, con una dead-letter queue opcional elegida entre las colas existentes. Si ya
+        existe una idéntica no la duplica y lo indica con created=false; si existe con otra configuración,
+        responde con un conflicto.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQueueRequest'
+      responses:
+        '200':
+          description: Ya existía una cola idéntica; no se ha duplicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueCreationResponse'
+        '201':
+          description: Cola creada.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueCreationResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+    delete:
+      tags:
+        - RabbitMqQueues
+      operationId: deleteQueue
+      summary: Elimina una cola
+      description: >-
+        Elimina la cola con sus mensajes y sus bindings. Si es la dead-letter queue de otras colas, estas
+        siguen existiendo y los mensajes que rechacen sin reencolar se descartarán.
+      parameters:
+        - name: name
+          in: query
+          required: true
+          description: Nombre de la cola. Va como parámetro de consulta porque puede contener caracteres como «/».
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cola eliminada.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+  /api/rabbitmq/bindings:
+    get:
+      tags:
+        - RabbitMqBindings
+      operationId: listBindings
+      summary: Lista los bindings
+      description: >-
+        Devuelve los bindings creados por el usuario, opcionalmente filtrados por exchange y por cola.
+        No incluye los implícitos del exchange por defecto.
+      parameters:
+        - name: exchange
+          in: query
+          required: false
+          description: Si se indica, solo los bindings de este exchange.
+          schema:
+            type: string
+        - name: queue
+          in: query
+          required: false
+          description: Si se indica, solo los bindings hacia esta cola.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Bindings existentes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Binding'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+    post:
+      tags:
+        - RabbitMqBindings
+      operationId: createBinding
+      summary: Crea un binding
+      description: >-
+        Enlaza un exchange con una cola. Si ya existe uno idéntico no lo duplica y lo indica con
+        created=false. En un exchange fanout la routing key se ignora. No se admiten bindings sobre el
+        exchange por defecto.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBindingRequest'
+      responses:
+        '200':
+          description: Ya existía un binding idéntico; no se ha duplicado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BindingCreationResponse'
+        '201':
+          description: Binding creado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BindingCreationResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+    delete:
+      tags:
+        - RabbitMqBindings
+      operationId: deleteBinding
+      summary: Elimina un binding
+      description: >-
+        Elimina el binding indicado sin afectar a los mensajes que ya están en la cola. No se admiten
+        bindings sobre el exchange por defecto.
+      parameters:
+        - name: exchange
+          in: query
+          required: true
+          description: Nombre del exchange de origen.
+          schema:
+            type: string
+        - name: queue
+          in: query
+          required: true
+          description: Nombre de la cola de destino.
+          schema:
+            type: string
+        - name: routingKey
+          in: query
+          required: false
+          description: Routing key o patrón del binding. Si se omite, es la vacía.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Binding eliminado.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+  /api/rabbitmq/publications:
+    post:
+      tags:
+        - RabbitMqPublications
+      operationId: publishMessage
+      summary: Publica un mensaje en un exchange
+      description: >-
+        Publica un mensaje de texto, de forma persistente, y espera la confirmación de RabbitMQ. Responde
+        200 con routed=false si RabbitMQ lo ha aceptado pero ninguna cola lo ha recibido porque ningún
+        binding coincide; en ese caso el mensaje se ha descartado. Con el exchange por defecto (nombre vacío)
+        la routing key es el nombre de la cola de destino.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishRequest'
+      responses:
+        '200':
+          description: RabbitMQ ha aceptado el mensaje.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublishResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+  /api/rabbitmq/queues/messages:
+    get:
+      tags:
+        - RabbitMqQueueMessages
+      operationId: inspectQueue
+      summary: Inspecciona los mensajes de una cola
+      description: >-
+        Devuelve los primeros 50 mensajes listos de la cola, en su orden, sin retirarlos. No incluye los
+        pendientes de confirmar por un consumidor. RabbitMQ no ofrece una lectura sin efecto, así que la
+        inspección puede dejar los mensajes marcados como reentregados.
+      parameters:
+        - name: queue
+          in: query
+          required: true
+          description: Nombre de la cola.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Mensajes listos de la cola.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QueueInspection'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+    delete:
+      tags:
+        - RabbitMqQueueMessages
+      operationId: purgeQueue
+      summary: Vacía una cola
+      description: >-
+        Elimina los mensajes listos de la cola, manteniendo la cola y sus bindings. No afecta a los mensajes
+        pendientes de confirmar por un consumidor.
+      parameters:
+        - name: queue
+          in: query
+          required: true
+          description: Nombre de la cola.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Cola vaciada.
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+  /api/rabbitmq/session/events:
+    get:
+      tags:
+        - RabbitMqSessionEvents
+      operationId: openSessionEvents
+      summary: Abre el flujo de eventos de una sesión
+      description: >-
+        Abre un flujo de eventos (Server-Sent Events) que identifica una sesión, normalmente una pestaña del
+        navegador. Los consumidores que se inicien en la sesión entregan sus mensajes por este flujo. Al
+        cerrarse el flujo, la sesión termina y se detienen sus consumidores, devolviendo a la cola los
+        mensajes pendientes de confirmar. Eventos: session-started (SessionStartedEvent), consumer-started
+        (ConsumerStartedEvent), message-received (MessageReceivedEvent) y consumer-stopped
+        (ConsumerStoppedEvent). Cada 15 segundos se envía un comentario de latido. No hay reconexión
+        automática: una sesión nueva no conserva los consumidores de la anterior.
+      responses:
+        '200':
+          description: Flujo de eventos abierto.
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/ConsumerEventStream'
+  /api/rabbitmq/sessions/{sessionId}/consumers:
+    post:
+      tags:
+        - RabbitMqConsumers
+      operationId: createConsumer
+      summary: Inicia un consumidor en una sesión
+      description: >-
+        Empieza a consumir una cola. En modo MANUAL el consumidor retiene como máximo un mensaje pendiente
+        de confirmar. Los mensajes se entregan por el flujo de eventos de la sesión.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Identificador de la sesión, recibido en el evento session-started.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateConsumerRequest'
+      responses:
+        '201':
+          description: Consumidor iniciado.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consumer'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+  /api/rabbitmq/sessions/{sessionId}/consumers/{consumerId}:
+    delete:
+      tags:
+        - RabbitMqConsumers
+      operationId: deleteConsumer
+      summary: Detiene un consumidor
+      description: Detiene el consumidor y devuelve a la cola sus mensajes pendientes de confirmar.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Identificador de la sesión, recibido en el evento session-started.
+          schema:
+            type: string
+        - name: consumerId
+          in: path
+          required: true
+          description: Identificador del consumidor.
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Consumidor detenido.
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
+  /api/rabbitmq/sessions/{sessionId}/consumers/{consumerId}/messages/{deliveryTag}:
+    post:
+      tags:
+        - RabbitMqConsumers
+      operationId: resolveMessage
+      summary: Resuelve un mensaje pendiente de confirmar
+      description: >-
+        Confirma el mensaje, lo rechaza y reencola, o lo rechaza sin reencolar. Un mensaje solo se puede
+        resolver una vez. Si se rechaza sin reencolar, el resultado indica si fue a la dead-letter queue
+        o se descartó.
+      parameters:
+        - name: sessionId
+          in: path
+          required: true
+          description: Identificador de la sesión, recibido en el evento session-started.
+          schema:
+            type: string
+        - name: consumerId
+          in: path
+          required: true
+          description: Identificador del consumidor.
+          schema:
+            type: string
+        - name: deliveryTag
+          in: path
+          required: true
+          description: Identificador del mensaje recibido en el evento message-received.
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResolveMessageRequest'
+      responses:
+        '200':
+          description: Mensaje resuelto.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolveMessageResponse'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '502':
+          $ref: '#/components/responses/BrokerRejectedError'
+        '503':
+          $ref: '#/components/responses/BrokerUnavailableError'
+        '504':
+          $ref: '#/components/responses/BrokerTimeoutError'
 components:
+  responses:
+    ValidationError:
+      description: Los datos enviados no son válidos.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    NotFoundError:
+      description: El elemento indicado no existe.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    ConflictError:
+      description: La operación choca con el estado actual.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    BrokerRejectedError:
+      description: RabbitMQ ha rechazado la operación.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    BrokerUnavailableError:
+      description: RabbitMQ no está disponible.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+    BrokerTimeoutError:
+      description: RabbitMQ no ha respondido dentro del tiempo máximo de espera.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
   schemas:
+    ApiError:
+      type: object
+      description: Error de una operación, con un mensaje en español dirigido al usuario.
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Tipo de error.
+          enum:
+            - VALIDATION
+            - NOT_FOUND
+            - CONFLICT
+            - BROKER_UNAVAILABLE
+            - TIMEOUT
+            - BROKER_REJECTED
+          example: BROKER_UNAVAILABLE
+        message:
+          type: string
+          description: Explicación del error en español, sin detalles técnicos internos.
+          example: RabbitMQ no está disponible.
     StatusResponse:
       type: object
       description: Estado, nombre y versión del backend.
@@ -47,3 +678,413 @@ components:
           type: string
           description: Versión del backend.
           example: 0.1.0
+    RabbitMqStatusResponse:
+      type: object
+      description: Estado de la conexión del backend con RabbitMQ.
+      required:
+        - status
+        - version
+      properties:
+        status:
+          type: string
+          description: CONNECTED cuando el backend puede comunicarse con RabbitMQ.
+          enum:
+            - CONNECTED
+          example: CONNECTED
+        version:
+          type: string
+          description: Versión de RabbitMQ.
+          example: 4.4.0
+    ExchangeType:
+      type: string
+      description: Tipo de exchange.
+      enum:
+        - DIRECT
+        - FANOUT
+        - TOPIC
+    Exchange:
+      type: object
+      description: Exchange de RabbitMQ.
+      required:
+        - name
+        - type
+        - predefined
+      properties:
+        name:
+          type: string
+          description: Nombre del exchange. El exchange por defecto tiene el nombre vacío.
+          example: pedidos
+        type:
+          $ref: '#/components/schemas/ExchangeType'
+        predefined:
+          type: boolean
+          description: Es uno de los que trae RabbitMQ; no se puede modificar ni eliminar.
+    CreateExchangeRequest:
+      type: object
+      description: Datos para crear un exchange.
+      required:
+        - name
+        - type
+      properties:
+        name:
+          type: string
+          description: Nombre del exchange. Hasta 255 caracteres, sin caracteres de control y sin el prefijo «amq.».
+          example: pedidos
+        type:
+          $ref: '#/components/schemas/ExchangeType'
+    ExchangeCreationResponse:
+      type: object
+      description: Resultado de crear un exchange.
+      required:
+        - exchange
+        - created
+      properties:
+        exchange:
+          $ref: '#/components/schemas/Exchange'
+        created:
+          type: boolean
+          description: Falso si ya existía un exchange idéntico y no se ha duplicado.
+    Queue:
+      type: object
+      description: Cola de RabbitMQ con sus contadores.
+      required:
+        - name
+        - ready
+        - unacknowledged
+        - total
+      properties:
+        name:
+          type: string
+          description: Nombre de la cola.
+          example: pedidos-nuevos
+        deadLetterQueue:
+          type: string
+          nullable: true
+          description: Cola a la que van los mensajes rechazados sin reencolar. Nulo si no tiene.
+          example: pedidos-fallidos
+        ready:
+          type: integer
+          format: int64
+          description: Mensajes listos para entregar.
+        unacknowledged:
+          type: integer
+          format: int64
+          description: Mensajes entregados a un consumidor y pendientes de confirmar.
+        total:
+          type: integer
+          format: int64
+          description: Mensajes listos más pendientes de confirmar.
+    CreateQueueRequest:
+      type: object
+      description: Datos para crear una cola.
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Nombre de la cola. Hasta 255 caracteres, sin caracteres de control y sin el prefijo «amq.».
+          example: pedidos-nuevos
+        deadLetterQueue:
+          type: string
+          nullable: true
+          description: Nombre de una cola existente que recibirá los mensajes rechazados sin reencolar. No puede ser la propia cola.
+          example: pedidos-fallidos
+    QueueCreationResponse:
+      type: object
+      description: Resultado de crear una cola.
+      required:
+        - queue
+        - created
+      properties:
+        queue:
+          $ref: '#/components/schemas/Queue'
+        created:
+          type: boolean
+          description: Falso si ya existía una cola idéntica y no se ha duplicado.
+    Binding:
+      type: object
+      description: Enlace entre un exchange y una cola.
+      required:
+        - exchange
+        - queue
+        - routingKey
+      properties:
+        exchange:
+          type: string
+          description: Nombre del exchange de origen.
+          example: pedidos
+        queue:
+          type: string
+          description: Nombre de la cola de destino.
+          example: pedidos-nuevos
+        routingKey:
+          type: string
+          description: Routing key o patrón. Vacía si el exchange es fanout o se dejó vacía.
+          example: pedido.creado
+    CreateBindingRequest:
+      type: object
+      description: Datos para crear un binding.
+      required:
+        - exchange
+        - queue
+      properties:
+        exchange:
+          type: string
+          description: Nombre del exchange de origen. No puede ser el exchange por defecto.
+          example: pedidos
+        queue:
+          type: string
+          description: Nombre de la cola de destino.
+          example: pedidos-nuevos
+        routingKey:
+          type: string
+          nullable: true
+          description: >-
+            Routing key (direct) o patrón (topic) de hasta 255 caracteres. Opcional y vacía por defecto;
+            se ignora en un exchange fanout.
+          example: pedido.*
+    BindingCreationResponse:
+      type: object
+      description: Resultado de crear un binding.
+      required:
+        - binding
+        - created
+      properties:
+        binding:
+          $ref: '#/components/schemas/Binding'
+        created:
+          type: boolean
+          description: Falso si ya existía un binding idéntico y no se ha duplicado.
+    PublishRequest:
+      type: object
+      description: Mensaje de texto que se quiere publicar.
+      required:
+        - exchange
+        - body
+      properties:
+        exchange:
+          type: string
+          description: >-
+            Nombre del exchange. Vacío para el exchange por defecto, que entrega a la cola cuyo nombre es
+            la routing key.
+          example: pedidos
+        routingKey:
+          type: string
+          nullable: true
+          description: Routing key de hasta 255 caracteres. Opcional y vacía por defecto; un fanout la ignora.
+          example: pedido.creado
+        body:
+          type: string
+          description: Cuerpo del mensaje. No puede estar vacío ni superar los 65536 bytes en UTF-8.
+          example: '{"id": 42}'
+    PublishResponse:
+      type: object
+      description: Resultado de una publicación aceptada por RabbitMQ.
+      required:
+        - routed
+      properties:
+        routed:
+          type: boolean
+          description: Falso si ninguna cola ha recibido el mensaje porque ningún binding coincide; se ha descartado.
+    DeathInfo:
+      type: object
+      description: Por qué un mensaje de una dead-letter queue llegó hasta ella.
+      required:
+        - originQueue
+        - reason
+      properties:
+        originQueue:
+          type: string
+          description: Cola de la que salió el mensaje.
+          example: pedidos-nuevos
+        reason:
+          type: string
+          description: Motivo, tal como lo informa RabbitMQ; por ejemplo «rejected».
+          example: rejected
+    QueueMessage:
+      type: object
+      description: Mensaje de una cola.
+      required:
+        - body
+        - exchange
+        - routingKey
+        - redelivered
+      properties:
+        body:
+          type: string
+          description: Cuerpo del mensaje como texto. Si no es texto UTF-8 válido se indica que es binario y se muestra en base64.
+        exchange:
+          type: string
+          description: Exchange por el que llegó; en una dead-letter queue, el original. Vacío si es el exchange por defecto.
+        routingKey:
+          type: string
+          description: Routing key con la que llegó; en una dead-letter queue, la original.
+        redelivered:
+          type: boolean
+          description: Marcado como reentregado. La propia inspección puede marcarlo.
+        deathInfo:
+          allOf:
+            - $ref: '#/components/schemas/DeathInfo'
+          nullable: true
+          description: Solo en mensajes de una dead-letter queue, cuando RabbitMQ lo proporciona.
+    QueueInspection:
+      type: object
+      description: Resultado de inspeccionar una cola.
+      required:
+        - messages
+        - total
+        - truncated
+      properties:
+        messages:
+          type: array
+          description: Hasta 50 mensajes listos, en el orden de la cola.
+          items:
+            $ref: '#/components/schemas/QueueMessage'
+        total:
+          type: integer
+          format: int64
+          description: Mensajes listos que tiene la cola.
+        truncated:
+          type: boolean
+          description: Hay más mensajes listos de los que se muestran.
+    AckMode:
+      type: string
+      description: Cómo confirma los mensajes un consumidor.
+      enum:
+        - AUTOMATIC
+        - MANUAL
+    MessageAction:
+      type: string
+      description: Qué hacer con un mensaje pendiente de confirmar.
+      enum:
+        - ACK
+        - REQUEUE
+        - REJECT
+    ActionOutcome:
+      type: string
+      description: >-
+        Qué ha pasado finalmente con el mensaje. DEAD_LETTERED si pasó a la dead-letter queue de la cola,
+        DISCARDED si se rechazó sin reencolar en una cola sin dead-letter queue.
+      enum:
+        - CONFIRMED
+        - REQUEUED
+        - DEAD_LETTERED
+        - DISCARDED
+    StopReason:
+      type: string
+      description: Por qué ha terminado un consumidor.
+      enum:
+        - USER
+        - QUEUE_DELETED
+        - CONNECTION_LOST
+        - SESSION_CLOSED
+    CreateConsumerRequest:
+      type: object
+      description: Datos para iniciar un consumidor.
+      required:
+        - name
+        - queue
+        - ackMode
+      properties:
+        name:
+          type: string
+          description: Nombre del consumidor, único en la sesión. Hasta 255 caracteres.
+          example: consumidor-1
+        queue:
+          type: string
+          description: Nombre de la cola que consume.
+          example: pedidos-nuevos
+        ackMode:
+          $ref: '#/components/schemas/AckMode'
+    Consumer:
+      type: object
+      description: Consumidor activo de una sesión.
+      required:
+        - id
+        - name
+        - queue
+        - ackMode
+      properties:
+        id:
+          type: string
+          description: Identificador del consumidor.
+        name:
+          type: string
+          description: Nombre del consumidor.
+        queue:
+          type: string
+          description: Cola que consume.
+        ackMode:
+          $ref: '#/components/schemas/AckMode'
+    ResolveMessageRequest:
+      type: object
+      description: Acción que se aplica a un mensaje.
+      required:
+        - action
+      properties:
+        action:
+          $ref: '#/components/schemas/MessageAction'
+    ResolveMessageResponse:
+      type: object
+      description: Resultado de resolver un mensaje.
+      required:
+        - outcome
+      properties:
+        outcome:
+          $ref: '#/components/schemas/ActionOutcome'
+    ConsumerEventStream:
+      type: string
+      description: >-
+        Flujo de eventos text/event-stream. El generador lo sustituye por SseEmitter (schemaMappings); los
+        eventos concretos son SessionStartedEvent, ConsumerStartedEvent, MessageReceivedEvent y
+        ConsumerStoppedEvent.
+    SessionStartedEvent:
+      type: object
+      description: Primer evento del flujo (nombre de evento session-started).
+      required:
+        - sessionId
+      properties:
+        sessionId:
+          type: string
+          description: Identificador de la sesión, necesario para iniciar consumidores.
+    ConsumerStartedEvent:
+      type: object
+      description: Un consumidor ha empezado a consumir (nombre de evento consumer-started).
+      required:
+        - consumer
+      properties:
+        consumer:
+          $ref: '#/components/schemas/Consumer'
+    MessageReceivedEvent:
+      type: object
+      description: Un consumidor ha recibido un mensaje (nombre de evento message-received).
+      required:
+        - consumerId
+        - deliveryTag
+        - message
+      properties:
+        consumerId:
+          type: string
+          description: Consumidor que lo ha recibido.
+        deliveryTag:
+          type: integer
+          format: int64
+          description: Identificador del mensaje para resolverlo en modo MANUAL.
+        message:
+          $ref: '#/components/schemas/QueueMessage'
+    ConsumerStoppedEvent:
+      type: object
+      description: Un consumidor ha terminado (nombre de evento consumer-stopped).
+      required:
+        - consumerId
+        - reason
+        - message
+      properties:
+        consumerId:
+          type: string
+          description: Consumidor que ha terminado.
+        reason:
+          $ref: '#/components/schemas/StopReason'
+        message:
+          type: string
+          description: Explicación en español dirigida al usuario.

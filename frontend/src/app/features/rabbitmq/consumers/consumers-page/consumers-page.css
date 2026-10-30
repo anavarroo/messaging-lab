@@ -1,0 +1,136 @@
+.consumers {
+  max-width: 62rem;
+}
+
+h5 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.modes {
+  border: 0;
+  padding: 0;
+}
+
+.modes legend {
+  padding: 0;
+  font-weight: 600;
+}
+
+.radio {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 400;
+}
+
+.small {
+  align-self: flex-start;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+}
+
+.stream-error button {
+  margin: 0.25rem 0;
+}
+
+.consumer {
+  margin: 0 0 1rem;
+  padding: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.consumer.stopped {
+  background: #fafafa;
+}
+
+.consumer-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.meta {
+  margin: 0.25rem 0 0.5rem;
+  color: #555;
+}
+
+.badge.active {
+  background: #eaf6ee;
+  color: #1b7a3a;
+}
+
+.badge.warn {
+  background: #fff8e1;
+  color: #5c4300;
+}
+
+.stop-message {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid #f2a900;
+  background: #fff8e1;
+  color: #5c4300;
+}
+
+.log {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-height: 32rem;
+  overflow-y: auto;
+}
+
+.message {
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.body {
+  margin: 0 0 0.5rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+  background: #f5f5f5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.meta-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.125rem 1rem;
+  margin: 0 0 0.5rem;
+  font-size: 0.9rem;
+}
+
+.meta-list dt {
+  font-weight: 600;
+}
+
+.meta-list dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.outcome {
+  margin: 0;
+  font-weight: 600;
+}
+
+.outcome.discarded {
+  color: #7a1712;
+}
+
+.empty {
+  margin: 0;
+  color: #555;
+}

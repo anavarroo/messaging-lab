@@ -1,10 +1,11 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, TimeoutError, catchError, map, throwError, timeout } from 'rxjs';
+import { REQUEST_TIMEOUT_MS } from '../http/request-timeout';
 import { BackendStatus, isBackendStatus } from './backend-status';
 
-/** Tiempo máximo de espera de la respuesta del backend (RNF-4). */
-export const STATUS_TIMEOUT_MS = 20_000;
+/** Tiempo máximo de espera de la respuesta del backend (RNF-4), compartido con el resto de peticiones. */
+export const STATUS_TIMEOUT_MS = REQUEST_TIMEOUT_MS;
 
 /**
  * - `unavailable`: no se ha podido contactar con el backend (sin respuesta, red o proxy).
