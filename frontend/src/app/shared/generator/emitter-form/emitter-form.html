@@ -1,0 +1,110 @@
+<form class="emitter-form" [formGroup]="form" (submit)="$event.preventDefault(); submit()" novalidate>
+  @if (presets().length > 0) {
+    <div class="presets">
+      <div class="field">
+        <label for="emitter-preset">Plantilla del catálogo</label>
+        <select id="emitter-preset" [formControl]="presetId">
+          <option value="">Elige una plantilla…</option>
+          @for (preset of presets(); track preset.id) {
+            <option [value]="preset.id">{{ preset.name }}</option>
+          }
+        </select>
+      </div>
+      <button type="button" class="secondary" [disabled]="!presetId.value" (click)="applyPreset()">
+        Usar plantilla
+      </button>
+    </div>
+    @for (preset of presets(); track preset.id) {
+      @if (preset.id === presetId.value) {
+        <p class="help preset-description">{{ preset.description }}</p>
+      }
+    }
+  }
+
+  <div class="field">
+    <label for="emitter-name">Nombre</label>
+    <input id="emitter-name" type="text" formControlName="name" autocomplete="off"
+      aria-describedby="emitter-name-error" [attr.aria-invalid]="attempted() && errors().name ? 'true' : null" />
+    <p id="emitter-name-error" class="field-error" role="alert">@if (attempted()) { {{ errors().name }} }</p>
+  </div>
+
+  <ng-content select="[destination]" />
+
+  <fieldset class="frequency">
+    <legend>Frecuencia</legend>
+    <div class="modes">
+      <label><input type="radio" formControlName="mode" value="FIXED" /> Fija</label>
+      <label><input type="radio" formControlName="mode" value="RANGE" /> Aleatoria dentro de un rango</label>
+    </div>
+    @if (form.controls.mode.value === 'FIXED') {
+      <div class="field">
+        <label for="emitter-fixed">Cada (ms)</label>
+        <input id="emitter-fixed" type="number" min="2" step="1" inputmode="numeric" formControlName="fixedMs"
+          aria-describedby="emitter-interval-error" [attr.aria-invalid]="attempted() && errors().interval ? 'true' : null" />
+      </div>
+    } @else {
+      <div class="range">
+        <div class="field">
+          <label for="emitter-min">Mínimo (ms)</label>
+          <input id="emitter-min" type="number" min="2" step="1" inputmode="numeric" formControlName="minMs"
+            aria-describedby="emitter-interval-error" [attr.aria-invalid]="attempted() && errors().interval ? 'true' : null" />
+        </div>
+        <div class="field">
+          <label for="emitter-max">Máximo (ms)</label>
+          <input id="emitter-max" type="number" min="2" step="1" inputmode="numeric" formControlName="maxMs"
+            aria-describedby="emitter-interval-error" [attr.aria-invalid]="attempted() && errors().interval ? 'true' : null" />
+        </div>
+      </div>
+    }
+    @if (frequencySummary(); as summary) {
+      <p class="help frequency-summary">{{ summary }}</p>
+    }
+    <p id="emitter-interval-error" class="field-error" role="alert">@if (attempted()) { {{ errors().interval }} }</p>
+  </fieldset>
+
+  <div class="field wide">
+    <label for="emitter-template">Plantilla del mensaje</label>
+    <textarea id="emitter-template" rows="8" spellcheck="false" formControlName="template"
+      aria-describedby="emitter-template-error" [attr.aria-invalid]="attempted() && errors().template ? 'true' : null"></textarea>
+    <p id="emitter-template-error" class="field-error" role="alert">@if (attempted()) { {{ errors().template }} }</p>
+    <div class="preview-actions">
+      <button type="button" class="secondary" [disabled]="previewing()" (click)="showPreview()">
+        {{ previewing() ? 'Generando…' : 'Vista previa' }}
+      </button>
+    </div>
+    @if (previewError(); as message) {
+      <p class="error preview-error" role="alert">{{ message }}</p>
+    }
+    @if (preview(); as result) {
+      <div class="preview-result">
+        <pre class="preview-body">{{ result.body }}</pre>
+        <p class="help preview-size">{{ result.bytes }} bytes. Cada mensaje llevará valores distintos.</p>
+      </div>
+    }
+  </div>
+
+  <div class="limits">
+    <div class="field">
+      <label for="emitter-max-messages">Parar tras (mensajes)</label>
+      <input id="emitter-max-messages" type="number" min="1" step="1" inputmode="numeric" formControlName="maxMessages"
+        aria-describedby="emitter-max-messages-error" [attr.aria-invalid]="attempted() && errors().maxMessages ? 'true' : null" />
+      <p id="emitter-max-messages-error" class="field-error" role="alert">@if (attempted()) { {{ errors().maxMessages }} }</p>
+    </div>
+    <div class="field">
+      <label for="emitter-max-duration">Parar tras (segundos)</label>
+      <input id="emitter-max-duration" type="number" min="1" step="1" inputmode="numeric" formControlName="maxDurationSeconds"
+        aria-describedby="emitter-max-duration-error" [attr.aria-invalid]="attempted() && errors().maxDuration ? 'true' : null" />
+      <p id="emitter-max-duration-error" class="field-error" role="alert">@if (attempted()) { {{ errors().maxDuration }} }</p>
+    </div>
+  </div>
+  <p class="help">Déjalos vacíos para que el emisor publique hasta que lo pares.</p>
+
+  <label class="check">
+    <input type="checkbox" formControlName="onlyWhenChanged" /> Publicar solo cuando el valor cambie
+  </label>
+
+  @if (submitError(); as message) {
+    <p class="error submit-error" role="alert">{{ message }}</p>
+  }
+  <button type="submit" [disabled]="saving()">{{ saving() ? 'Creando…' : 'Crear emisor' }}</button>
+</form>

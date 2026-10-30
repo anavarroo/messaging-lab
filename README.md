@@ -179,6 +179,23 @@ Si prefieres que se note menos, reduce el intervalo con `HEARTBEAT_INTERVAL`:
 
 Un intervalo menor reduce esa espera, a costa de enviar más latidos. Con `5s`, la espera pasa a ser de unos 10 segundos como máximo.
 
+### Generador de tráfico
+
+La pestaña **Generador** del Laboratorio RabbitMQ publica mensajes sin parar, como lo haría un robot o un sensor, para ver cómo se comportan las colas con carga continua. Los emisores corren en el **backend**: siguen funcionando aunque cambies de pestaña o cierres el navegador, hasta que los pares o reinicies el backend (al reiniciar no queda nada en marcha).
+
+1. En **Nuevo emisor**, elige una plantilla del catálogo (robot UR, temperatura, sonómetro, vibración, tag de PLC, alarma) o escribe la tuya, y pulsa **Vista previa** para ver un mensaje de ejemplo.
+2. Elige el destino (un exchange con su routing key, o directamente una cola) y la frecuencia: **fija** (cada N ms) o **aleatoria dentro de un rango**.
+3. Pulsa **Crear emisor** y luego **Iniciar**. Puedes pausarlo, pararlo o eliminarlo. **Parar todo** detiene emisores y consumidores simulados.
+4. Para que una cola se vacíe, crea un **consumidor simulado** (tiempo de proceso, porcentaje de fallos y si el mensaje fallido se devuelve a la cola o se rechaza hacia la dead-letter queue). Un emisor más rápido que su consumidor hace crecer la cola, y se ve en **Colas**, que se actualiza sola cada 2 s.
+
+**Plantillas.** Son texto con funciones entre `{{ }}`: `numero`, `deriva`, `senoidal`, `contador`, `ahora`, `elegir`, `booleano` y `ejes`. No se ejecuta código; una plantilla inválida se rechaza indicando línea y columna.
+
+**Límites de seguridad.** La suma de los emisores en marcha no puede superar un límite global (100 mensajes por segundo por defecto, editable en la pantalla hasta un máximo absoluto de 500). Hay un máximo de 20 emisores y 20 consumidores simulados. Cuando una cola supera los 10 000 mensajes listos, la pantalla avisa.
+
+**Dos tipos de consumidor.** Los *simulados* (Generador) consumen solos en el servidor. Los *de sesión* (Consumidores) los controlas tú mensaje a mensaje y se detienen al cerrar la pestaña.
+
+Contrato: operaciones `/api/rabbitmq/generator/*` en [`backend/api/api.yml`](backend/api/api.yml). Especificación: [`specs/04-rabbitmq-traffic-generator/`](specs/04-rabbitmq-traffic-generator/).
+
 ## Pruebas
 
 Las pruebas de cada componente se ejecutan por separado y no necesitan que el otro esté en marcha.

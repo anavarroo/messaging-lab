@@ -138,7 +138,8 @@ Criterios de aceptación (EARS):
 - **CA-8.6:** Si la cola no tiene mensajes listos, entonces el sistema deberá indicarlo.
 - **CA-8.7:** La inspección no deberá mostrar los mensajes pendientes de confirmar por un consumidor; el contador de pendientes indicará cuántos hay.
 - **CA-8.8:** Cuando el usuario realice una operación que modifique el contenido de una cola (publicar, vaciar, eliminar, o confirmar o rechazar un mensaje), el sistema deberá actualizar los contadores mostrados.
-- **CA-8.9:** El sistema no deberá actualizar los contadores de forma periódica automática; el usuario los actualiza con la acción de CA-8.2.
+- **CA-8.9:** Mientras el área de colas esté abierta, el sistema deberá actualizar los contadores automáticamente cada 2 segundos, sin mostrar un indicador de carga ni borrar el listado si una actualización falla. Esto permite ver en tiempo real los mensajes que publican los emisores del generador (especificación 04) y consumen los consumidores. La acción de CA-8.2 sigue disponible.
+- **CA-8.10:** Mientras el panel de inspección de una cola esté abierto, el sistema deberá volver a leer sus mensajes cada 2 segundos, salvo que el usuario desactive esa opción. Como cada lectura puede marcar los mensajes como reentregados (CA-8.4), el usuario puede desactivar la lectura automática desde el propio panel.
 
 ### RF-9 — Consumidor interactivo
 El usuario debe poder consumir mensajes de una cola decidiendo qué hacer con cada uno.
@@ -260,7 +261,6 @@ Criterios de aceptación (EARS):
 - Caducidad de mensajes y de colas (TTL) y límites de longitud, y por tanto el envío a dead-letter queue por estas causas: en esta especificación solo se envía por rechazo sin reencolado.
 - Transacciones de publicación y confirmaciones de publicador avanzadas.
 - Indicar a qué colas concretas se ha enrutado cada mensaje publicado: corresponde al visualizador de flujo.
-- Actualización periódica automática de los contadores de las colas.
 - Detección de ciclos entre varias dead-letter queues.
 - Consumidor automático con comportamiento configurable (por ejemplo, fallos simulados) y configuración avanzada del consumidor más allá de lo definido en RF-9.
 - Varios virtual hosts, y la gestión de usuarios y permisos de RabbitMQ.
@@ -290,4 +290,4 @@ La funcionalidad se considera terminada cuando:
 
 ## 9. Dudas abiertas
 
-No quedan dudas abiertas. Todas las aclaraciones se han incorporado a la especificación: credenciales y consola de administración (CA-1.5, CA-1.7, CA-1.8, CA-13.2), colas destinatarias (CA-7.3), tamaño del mensaje (CA-7.5), contadores (CA-8.2, CA-8.8, CA-8.9), inspección (CA-8.3), consumidores (CA-9.11 a CA-9.13), dead-letter queue en uso (CA-5.9) y ciclos de dead-letter queues (CL-11, CA-13.7).
+No quedan dudas abiertas. Todas las aclaraciones se han incorporado a la especificación: credenciales y consola de administración (CA-1.5, CA-1.7, CA-1.8, CA-13.2), colas destinatarias (CA-7.3), tamaño del mensaje (CA-7.5), contadores (CA-8.2, CA-8.8, CA-8.9, CA-8.10), inspección (CA-8.3), consumidores (CA-9.11 a CA-9.13), dead-letter queue en uso (CA-5.9) y ciclos de dead-letter queues (CL-11, CA-13.7).

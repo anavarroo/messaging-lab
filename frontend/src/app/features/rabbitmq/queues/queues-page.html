@@ -2,7 +2,8 @@
   <h3 id="queues-title">Colas</h3>
   <p class="intro">
     Una cola guarda los mensajes hasta que un consumidor los procesa. Una dead-letter queue recibe los mensajes
-    que otra cola rechaza sin reencolar.
+    que otra cola rechaza sin reencolar. Los consumidores que ves en el área Consumidores y los consumidores
+    simulados del Generador leen de estas colas; sus mensajes aparecen y desaparecen aquí en tiempo real.
   </p>
 
   <form [formGroup]="form" (ngSubmit)="create()" novalidate class="create">
@@ -68,7 +69,7 @@
     <h4>Colas existentes</h4>
     <button type="button" class="secondary" (click)="reload()" [disabled]="loading()">Actualizar</button>
   </div>
-  <p class="help">Los contadores se actualizan al pulsar «Actualizar» y tras cada operación.</p>
+  <p class="help">Los contadores se actualizan solos cada pocos segundos: si un emisor del generador publica en una cola, o un consumidor la vacía, lo verás cambiar aquí.</p>
 
   @if (loadError(); as message) {
     <p class="error" role="alert">{{ message }}</p>

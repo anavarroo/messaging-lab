@@ -1,0 +1,53 @@
+.generator {
+  max-width: 62rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 0 0 1rem;
+}
+
+.refresh-note {
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.limit-summary {
+  margin: 0 0 0.75rem;
+}
+
+.limit-form {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.limit-form .field {
+  margin-bottom: 0;
+}
+
+.limit-form button {
+  align-self: flex-start;
+  margin-top: 1.7rem;
+}
+
+.empty {
+  margin: 0;
+  font-weight: 600;
+}
+
+.queue-warning {
+  margin: 0 0 1rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid #b26a00;
+  background: #fff4e0;
+  color: #5c3700;
+}
+
+.queue-warning ul {
+  margin: 0.25rem 0 0;
+  padding-left: 1.25rem;
+}

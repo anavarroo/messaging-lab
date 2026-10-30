@@ -13,6 +13,11 @@
     consumidor.
   </p>
 
+  <label class="auto-refresh">
+    <input type="checkbox" [checked]="autoRefresh()" (change)="toggleAutoRefresh($any($event.target).checked)" />
+    Actualizar los mensajes automáticamente cada pocos segundos
+  </label>
+
   @if (error(); as message) {
     <p class="error" role="alert">{{ message }}</p>
   }

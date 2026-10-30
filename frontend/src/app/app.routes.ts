@@ -29,6 +29,11 @@ export const routes: Routes = [
       { path: 'bindings', component: BindingsPage },
       { path: 'publish', component: PublishPage },
       { path: 'consumers', component: ConsumersPage },
+      // el generador es la pantalla más pesada y la menos usada: se descarga al abrirla
+      {
+        path: 'generator',
+        loadComponent: () => import('./features/rabbitmq/generator/generator-page').then((m) => m.GeneratorPage),
+      },
     ],
   },
   { path: '**', redirectTo: 'status' },

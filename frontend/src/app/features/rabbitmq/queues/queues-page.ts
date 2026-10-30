@@ -10,12 +10,16 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
+import { timer } from 'rxjs';
 import { ApiError } from '../../../core/http/api-error';
 import { ConfirmDialog } from '../../../shared/confirm-dialog/confirm-dialog';
 import { RabbitMqConnection } from '../connection/rabbitmq-connection';
 import { asValidator, validateName } from '../validation/validation';
 import { QueueMessagesPanel } from './queue-messages-panel';
 import { Queue, QueuesApi } from './queues-api';
+
+/** Cada cuánto se actualizan solos los contadores mientras el área está abierta. */
+export const QUEUES_REFRESH_MS = 2_000;
 
 const OWN_DEAD_LETTER_QUEUE = 'Una cola no puede ser su propia dead-letter queue.';
 
@@ -65,6 +69,14 @@ export class QueuesPage implements OnInit {
 
   ngOnInit(): void {
     this.reload();
+    // lo que publican los emisores del generador o consumen los consumidores se ve sin pulsar nada
+    timer(QUEUES_REFRESH_MS, QUEUES_REFRESH_MS)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (!this.loading() && !this.busy()) {
+          this.reload(true);
+        }
+      });
   }
 
   protected nameError(): string | null {
@@ -81,9 +93,14 @@ export class QueuesPage implements OnInit {
     return this.submitted() || this.form.controls.name.touched;
   }
 
-  /** Recarga los contadores a petición del usuario (CA-8.2); nunca hay recarga periódica (CA-8.9). */
-  protected reload(): void {
-    this.loading.set(true);
+  /**
+   * Recarga los contadores: a petición del usuario (CA-8.2), tras cada operación y cada pocos segundos. La recarga
+   * periódica es silenciosa: no muestra «Cargando» ni borra el listado si falla.
+   */
+  protected reload(silent = false): void {
+    if (!silent) {
+      this.loading.set(true);
+    }
     this.api
       .list()
       .pipe(takeUntilDestroyed(this.destroyRef))

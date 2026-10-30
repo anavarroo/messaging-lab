@@ -10,9 +10,13 @@ import {
   untracked,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { timer } from 'rxjs';
 import { ApiError } from '../../../core/http/api-error';
 import { RabbitMqConnection } from '../connection/rabbitmq-connection';
 import { QueueInspection, QueueMessage, QueuesApi } from './queues-api';
+
+/** Cada cuánto se vuelven a leer los mensajes mientras el panel está abierto. */
+export const MESSAGES_REFRESH_MS = 2_000;
 
 /**
  * Panel con los mensajes listos de una cola, leídos sin consumirlos (RF-8). Los cuerpos se muestran con
@@ -36,10 +40,20 @@ export class QueueMessagesPanel {
   protected readonly loading = signal(false);
   protected readonly error = signal<string | null>(null);
 
+  /** Releer los mensajes solo cada pocos segundos; se puede desactivar. */
+  protected readonly autoRefresh = signal(true);
+
   /** Identifica la última lectura pedida: una respuesta tardía de una cola anterior se ignora. */
   private lastRequest = 0;
 
   constructor() {
+    timer(MESSAGES_REFRESH_MS, MESSAGES_REFRESH_MS)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (this.autoRefresh() && !this.loading()) {
+          this.load(this.queue(), true);
+        }
+      });
     effect(() => {
       const queue = this.queue();
       untracked(() => {
@@ -58,9 +72,16 @@ export class QueueMessagesPanel {
     return message.exchange === '' ? '(exchange por defecto)' : message.exchange;
   }
 
-  private load(queue: string): void {
+  protected toggleAutoRefresh(enabled: boolean): void {
+    this.autoRefresh.set(enabled);
+  }
+
+  /** Una lectura periódica (`silent`) no muestra «Cargando» ni parpadea el panel. */
+  private load(queue: string, silent = false): void {
     const request = ++this.lastRequest;
-    this.loading.set(true);
+    if (!silent) {
+      this.loading.set(true);
+    }
     this.error.set(null);
     this.api
       .inspect(queue)

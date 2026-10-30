@@ -1,0 +1,119 @@
+<section class="generator" aria-labelledby="generator-title">
+  <h3 id="generator-title">Generador de tráfico</h3>
+  <p class="intro">
+    Un emisor simulado publica mensajes sin parar, a la frecuencia que tú decidas, como haría un robot o un
+    sensor. Corre en el servidor: sigue funcionando aunque cambies de pestaña o cierres el navegador, hasta que lo
+    pares.
+  </p>
+
+  <div class="toolbar">
+    <button type="button" class="danger stop-all" [disabled]="stoppingAll()" (click)="stopAll()">
+      {{ stoppingAll() ? 'Parando…' : 'Parar todo' }}
+    </button>
+    <span class="refresh-note">Se actualiza solo cada pocos segundos.</span>
+  </div>
+
+  <div class="feedback" aria-live="polite">
+    @if (notice(); as message) {
+      <p class="notice">{{ message }}</p>
+    }
+  </div>
+  @if (actionError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+  @if (loadError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  <div class="limit create">
+    <h4>Límite de seguridad</h4>
+    @if (settings(); as current) {
+      <p class="limit-summary">
+        Los emisores en marcha no pueden sumar más de <strong>{{ current.maxRatePerSecond }}</strong> mensajes por
+        segundo. Ahora usan <strong>{{ formatRate(current.ratePerSecondInUse) }}</strong>. El máximo absoluto es
+        {{ current.absoluteMaxRatePerSecond }}.
+      </p>
+    }
+    <form class="limit-form" (submit)="$event.preventDefault(); changeLimit()" novalidate>
+      <div class="field">
+        <label for="generator-limit">Mensajes por segundo</label>
+        <input
+          id="generator-limit"
+          type="number"
+          min="1"
+          step="1"
+          inputmode="numeric"
+          [formControl]="limit"
+          aria-describedby="generator-limit-error"
+          [attr.aria-invalid]="limit.touched && limitValidationError() ? 'true' : null"
+        />
+        <p id="generator-limit-error" class="field-error" role="alert">
+          @if (limit.touched && limitValidationError(); as message) {
+            {{ message }}
+          } @else {
+            {{ limitError() }}
+          }
+        </p>
+      </div>
+      <button type="submit" [disabled]="savingLimit() || !settings()">Cambiar límite</button>
+    </form>
+  </div>
+
+  @if (fullQueues().length > 0) {
+    <div class="queue-warning" role="status">
+      <strong>Hay colas llenándose.</strong>
+      <ul>
+        @for (queue of fullQueues(); track queue.name) {
+          <li>
+            La cola «{{ queue.name }}» tiene {{ queue.ready }} mensajes listos (más de {{ warningThreshold }}). Para o
+            ralentiza los emisores, o crea un consumidor simulado que la vacíe.
+          </li>
+        }
+      </ul>
+    </div>
+  }
+
+  <div class="create new-emitter">
+    <h4>Nuevo emisor</h4>
+    <app-emitter-form
+      [presets]="presets()"
+      [previewer]="preview"
+      [saving]="creatingEmitter()"
+      [submitError]="emitterError()"
+      (submitted)="createEmitter($event)"
+      (presetApplied)="onPreset($event)"
+    >
+      <app-rabbitmq-destination-form destination [exchanges]="exchanges()" [queues]="queues()" />
+    </app-emitter-form>
+  </div>
+
+  <h4>Emisores</h4>
+  @if (emitters(); as list) {
+    @if (list.length === 0) {
+      <p class="empty">Todavía no hay emisores.</p>
+    } @else {
+      <app-emitter-list
+        [emitters]="list"
+        [destinationLabel]="destinationLabel"
+        [busyIds]="busyIds()"
+        (requested)="act($event)"
+        (removed)="remove($event)"
+      />
+    }
+  } @else if (!loadError()) {
+    <p class="loading">Cargando los emisores…</p>
+  }
+
+  <app-simulated-consumers
+    [consumers]="consumers()"
+    [queues]="queues()"
+    [busyIds]="busyConsumerIds()"
+    [saving]="creatingConsumer()"
+    [submitError]="consumerError()"
+    (created)="createConsumer($event)"
+    (requested)="actOnConsumer($event)"
+    (removed)="removeConsumer($event)"
+  />
+
+  <app-confirm-dialog />
+</section>

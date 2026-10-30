@@ -11,6 +11,7 @@ import { ApiError } from '../../../core/http/api-error';
 import { RabbitMqConnection } from '../connection/rabbitmq-connection';
 import { BindingsApi } from '../bindings/bindings-api';
 import { ExchangesApi } from '../exchanges/exchanges-api';
+import { GeneratorApi } from '../generator/generator-api';
 import { PublishApi } from '../publish/publish-api';
 import { QueuesApi } from '../queues/queues-api';
 import { RabbitMqLab } from './rabbitmq-lab';
@@ -18,7 +19,7 @@ import { RabbitMqLab } from './rabbitmq-lab';
 describe('RabbitMqLab', () => {
   const exchangesList = vi.fn(() => NEVER);
   const STATUS = '/api/rabbitmq/status';
-  const AREAS = ['Guía', 'Exchanges', 'Colas', 'Bindings', 'Publicación', 'Consumidores'];
+  const AREAS = ['Guía', 'Exchanges', 'Colas', 'Bindings', 'Publicación', 'Consumidores', 'Generador'];
 
   let harness: RouterTestingHarness;
   let router: Router;
@@ -38,6 +39,7 @@ describe('RabbitMqLab', () => {
         { provide: QueuesApi, useValue: { list: () => NEVER } },
         { provide: BindingsApi, useValue: { list: () => NEVER } },
         { provide: PublishApi, useValue: {} },
+        { provide: GeneratorApi, useValue: { listEmitters: () => NEVER, getSettings: () => NEVER, listConsumers: () => NEVER, listTemplates: () => NEVER } },
       ],
     });
     router = TestBed.inject(Router);
@@ -119,6 +121,7 @@ describe('RabbitMqLab', () => {
       ['/rabbitmq/bindings', 'app-bindings-page'],
       ['/rabbitmq/publish', 'app-publish-page'],
       ['/rabbitmq/consumers', 'app-consumers-page'],
+      ['/rabbitmq/generator', 'app-generator-page'],
     ];
     for (const [index, [url, selector]] of expected.entries()) {
       tabs()[index].click();

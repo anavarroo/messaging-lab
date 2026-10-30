@@ -1,0 +1,127 @@
+<section class="consumers" aria-labelledby="consumers-title">
+  <h4 id="consumers-title">Consumidores simulados</h4>
+  <p class="help">
+    Un consumidor simulado lee de una cola, tarda lo que le indiques en procesar cada mensaje y puede fallar un
+    porcentaje de las veces. Son consumidores <strong>simulados</strong>: corren en el servidor y siguen aunque cierres el
+    navegador. Los consumidores que controlas tú mensaje a mensaje (confirmar, rechazar…) son los de sesión y se crean en
+    el área Consumidores. Sirve para ver cómo se vacía (o no) una cola mientras los emisores la llenan.
+  </p>
+
+  <form class="create" [formGroup]="form" (submit)="$event.preventDefault(); submit()" novalidate>
+    <div class="field">
+      <label for="consumer-name">Nombre</label>
+      <input id="consumer-name" type="text" formControlName="name" autocomplete="off"
+        aria-describedby="consumer-name-error" [attr.aria-invalid]="attempted() && errors().name ? 'true' : null" />
+      <p id="consumer-name-error" class="field-error" role="alert">@if (attempted()) { {{ errors().name }} }</p>
+    </div>
+    <div class="field">
+      <label for="consumer-queue">Cola</label>
+      <select id="consumer-queue" formControlName="queue" aria-describedby="consumer-queue-error"
+        [attr.aria-invalid]="attempted() && errors().queue ? 'true' : null">
+        <option value="">Elige una cola…</option>
+        @for (queue of queues(); track queue.name) {
+          <option [value]="queue.name">{{ queue.name }}</option>
+        }
+      </select>
+      <p id="consumer-queue-error" class="field-error" role="alert">@if (attempted()) { {{ errors().queue }} }</p>
+    </div>
+
+    <fieldset class="processing">
+      <legend>Tiempo de proceso por mensaje</legend>
+      <div class="modes">
+        <label><input type="radio" formControlName="mode" value="FIXED" /> Fijo</label>
+        <label><input type="radio" formControlName="mode" value="RANGE" /> Aleatorio dentro de un rango</label>
+      </div>
+      @if (form.controls.mode.value === 'FIXED') {
+        <div class="field">
+          <label for="consumer-fixed">Tarda (ms)</label>
+          <input id="consumer-fixed" type="number" min="2" step="1" inputmode="numeric" formControlName="fixedMs"
+            aria-describedby="consumer-processing-error" [attr.aria-invalid]="attempted() && errors().processing ? 'true' : null" />
+        </div>
+      } @else {
+        <div class="range">
+          <div class="field">
+            <label for="consumer-min">Mínimo (ms)</label>
+            <input id="consumer-min" type="number" min="2" step="1" inputmode="numeric" formControlName="minMs"
+              aria-describedby="consumer-processing-error" [attr.aria-invalid]="attempted() && errors().processing ? 'true' : null" />
+          </div>
+          <div class="field">
+            <label for="consumer-max">Máximo (ms)</label>
+            <input id="consumer-max" type="number" min="2" step="1" inputmode="numeric" formControlName="maxMs"
+              aria-describedby="consumer-processing-error" [attr.aria-invalid]="attempted() && errors().processing ? 'true' : null" />
+          </div>
+        </div>
+      }
+      <p id="consumer-processing-error" class="field-error" role="alert">@if (attempted()) { {{ errors().processing }} }</p>
+    </fieldset>
+
+    <div class="field">
+      <label for="consumer-failure">Porcentaje de fallos</label>
+      <input id="consumer-failure" type="number" min="0" max="100" step="1" inputmode="numeric" formControlName="failurePercent"
+        aria-describedby="consumer-failure-error" [attr.aria-invalid]="attempted() && errors().failure ? 'true' : null" />
+      <p id="consumer-failure-error" class="field-error" role="alert">@if (attempted()) { {{ errors().failure }} }</p>
+    </div>
+    <div class="field">
+      <label for="consumer-on-failure">Qué hace cuando falla</label>
+      <select id="consumer-on-failure" formControlName="onFailure">
+        <option value="REQUEUE">Devolver el mensaje a la cola</option>
+        <option value="REJECT">Rechazarlo (a la dead-letter queue, si la cola la tiene)</option>
+      </select>
+    </div>
+
+    @if (submitError(); as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+    <button type="submit" [disabled]="saving()">{{ saving() ? 'Creando…' : 'Crear consumidor' }}</button>
+  </form>
+
+  @if (consumers(); as list) {
+    @if (list.length === 0) {
+      <p class="empty">Todavía no hay consumidores simulados.</p>
+    } @else {
+      <ul class="consumer-list">
+        @for (consumer of list; track consumer.id) {
+          <li class="consumer" [attr.aria-label]="'Consumidor ' + consumer.name">
+            <div class="head">
+              <div>
+                <h5>{{ consumer.name }}</h5>
+                <p class="where">
+                  Cola «{{ consumer.queue }}» · {{ intervalText(consumer.processing) }} · {{ consumer.failurePercent }} % de fallos
+                </p>
+              </div>
+              <span class="badge" [class]="'badge status-' + consumer.status.toLowerCase()">{{ statusLabels[consumer.status] }}</span>
+            </div>
+            <dl class="counters">
+              <dt>Procesados</dt>
+              <dd>{{ consumer.processed }}</dd>
+              <dt>Fallidos</dt>
+              <dd>{{ consumer.failed }}</dd>
+              <dt>Ritmo real</dt>
+              <dd>{{ rate(consumer) }} por segundo</dd>
+            </dl>
+            @if (consumer.stopMessage; as message) {
+              <p class="stop-message" role="status">{{ message }}</p>
+            }
+            <div class="actions" role="group" [attr.aria-label]="'Controles de ' + consumer.name">
+              @if (consumer.status === 'RUNNING') {
+                <button type="button" class="secondary" [disabled]="isBusy(consumer)" (click)="requested.emit({ consumer, action: 'STOP' })">
+                  Parar
+                </button>
+              } @else {
+                <button type="button" [disabled]="isBusy(consumer)" (click)="requested.emit({ consumer, action: 'START' })">
+                  Iniciar
+                </button>
+              }
+              <button type="button" class="danger" [disabled]="isBusy(consumer)"
+                [attr.aria-label]="'Eliminar el consumidor ' + consumer.name" (click)="removed.emit(consumer)">
+                Eliminar
+              </button>
+            </div>
+          </li>
+        }
+      </ul>
+    }
+  } @else {
+    <p class="loading">Cargando los consumidores…</p>
+  }
+</section>

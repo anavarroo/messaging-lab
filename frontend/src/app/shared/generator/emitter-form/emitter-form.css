@@ -1,0 +1,75 @@
+.presets {
+  display: flex;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.presets .field {
+  margin-bottom: 0.75rem;
+}
+
+.presets button {
+  margin-bottom: 0.75rem;
+}
+
+.preset-description {
+  margin: 0 0 0.75rem;
+}
+
+.frequency {
+  margin: 0 0 0.75rem;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.modes {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+
+.modes label,
+.check {
+  font-weight: 400;
+}
+
+.range,
+.limits {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.field.wide {
+  max-width: 44rem;
+}
+
+textarea {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.9rem;
+}
+
+.preview-actions {
+  margin-top: 0.25rem;
+}
+
+.preview-body {
+  margin: 0.5rem 0 0.25rem;
+  padding: 0.5rem 0.75rem;
+  overflow: auto;
+  background: #f4f4f4;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.preview-size {
+  margin: 0;
+}
+
+.check {
+  display: block;
+  margin-bottom: 1rem;
+}

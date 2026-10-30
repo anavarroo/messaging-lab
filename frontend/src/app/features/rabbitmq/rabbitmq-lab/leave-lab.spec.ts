@@ -15,6 +15,7 @@ import { ConsumerSessionService } from '../consumers/consumer-session.service';
 import { ConsumersApi } from '../consumers/consumers-api';
 import { EVENT_SOURCE_FACTORY } from '../consumers/event-source-factory';
 import { ExchangesApi } from '../exchanges/exchanges-api';
+import { GeneratorApi } from '../generator/generator-api';
 import { PublishApi } from '../publish/publish-api';
 import { QueuesApi } from '../queues/queues-api';
 
@@ -40,6 +41,7 @@ describe('leaving the RabbitMQ lab with consumers (CA-9.14)', () => {
         { provide: QueuesApi, useValue: { list: () => NEVER } },
         { provide: BindingsApi, useValue: { list: () => NEVER } },
         { provide: PublishApi, useValue: {} },
+        { provide: GeneratorApi, useValue: { listEmitters: () => NEVER, getSettings: () => NEVER, listConsumers: () => NEVER, listTemplates: () => NEVER } },
         {
           provide: ConsumersApi,
           useValue: {

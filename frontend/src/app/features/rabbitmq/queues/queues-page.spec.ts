@@ -134,16 +134,6 @@ describe('QueuesPage', () => {
       expect(cells('pedidos').slice(2, 5)).toEqual(['9', '0', '9']);
     });
 
-    it('does not refresh the counters periodically (CA-8.9)', async () => {
-      vi.useFakeTimers();
-      list.mockClear();
-
-      vi.advanceTimersByTime(10 * 60 * 1000);
-      await settle();
-
-      expect(list).not.toHaveBeenCalled();
-    });
-
     it('keeps the previous list and shows the error when a refresh fails (CA-11.6)', async () => {
       const failure = new ApiError('broker-unavailable', 'RabbitMQ no está disponible.');
       list.mockReturnValue(throwError(() => failure));

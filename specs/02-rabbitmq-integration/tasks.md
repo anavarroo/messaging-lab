@@ -325,8 +325,8 @@ Convenciones:
 
 - [x] **T59 — Colas: listado y creación**
   Crear la vista de colas con el listado (listos, pendientes, total y dead-letter queue), el botón «Actualizar», el formulario con selector de dead-letter queue entre las colas existentes, y la recarga tras cada operación.
-  *RF:* RF-5 (CA-5.1 a CA-5.6), RF-8 (CA-8.1, CA-8.2, CA-8.8, CA-8.9)
-  *Hecho cuando:* las pruebas verifican contadores, actualización manual, recarga tras crear, validaciones, aviso de «ya existe», y que no hay actualización periódica.
+  *RF:* RF-5 (CA-5.1 a CA-5.6), RF-8 (CA-8.1, CA-8.2, CA-8.8, CA-8.9, CA-8.10)
+  *Hecho cuando:* las pruebas verifican contadores, actualización manual, recarga tras crear, validaciones, aviso de «ya existe», y la actualización periódica silenciosa de los contadores y de los mensajes inspeccionados (revisada tras la especificación 04).
 
 - [x] **T60 — Colas: borrar y vaciar con confirmación**
   Añadir borrar y vaciar con el diálogo de confirmación. Al borrar una cola que es dead-letter queue de otras, el diálogo lista las colas afectadas y avisa del descarte.

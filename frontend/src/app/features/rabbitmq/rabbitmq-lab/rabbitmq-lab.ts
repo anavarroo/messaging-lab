@@ -22,6 +22,7 @@ const AREAS: readonly LabArea[] = [
   { label: 'Bindings', path: 'bindings' },
   { label: 'Publicación', path: 'publish' },
   { label: 'Consumidores', path: 'consumers' },
+  { label: 'Generador', path: 'generator' },
 ];
 
 /**

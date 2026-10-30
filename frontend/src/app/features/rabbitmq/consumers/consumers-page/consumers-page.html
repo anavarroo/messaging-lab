@@ -5,6 +5,9 @@
     rechazarlo y devolverlo a la cola, o rechazarlo sin reencolar. Puedes iniciar varios sobre la misma cola para
     ver cómo RabbitMQ reparte los mensajes. Al salir del laboratorio o cerrar la pestaña, los consumidores se
     detienen y los mensajes pendientes de confirmar vuelven a la cola.
+    Son consumidores <strong>de sesión</strong>: están ligados a esta sesión del navegador y los controlas tú mensaje a mensaje. Los
+    consumidores que consumen solos, sin que intervengas, son los <strong>simulados</strong> y se crean en el área
+    Generador; siguen funcionando en el servidor aunque cierres la pestaña.
   </p>
 
   @if (session.streamError(); as message) {
