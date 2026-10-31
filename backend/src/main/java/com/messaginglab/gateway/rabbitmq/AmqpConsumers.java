@@ -38,6 +38,11 @@ class AmqpConsumers implements BrokerConsumers {
 
 	@Override
 	public ConsumerHandle start(String queue, AckMode ackMode, ConsumerListener listener) {
+		return start(queue, ackMode, listener, null);
+	}
+
+	@Override
+	public ConsumerHandle start(String queue, AckMode ackMode, ConsumerListener listener, String name) {
 		Channel channel = null;
 		try {
 			channel = connections.connection().createChannel();
@@ -45,7 +50,9 @@ class AmqpConsumers implements BrokerConsumers {
 			if (ackMode == AckMode.MANUAL) {
 				channel.basicQos(1);
 			}
-			channel.basicConsume(queue, ackMode == AckMode.AUTOMATIC, consumer::onDelivery, consumer::onCancel);
+			// con etiqueta vacía RabbitMQ genera una; con nombre, el consumidor se reconoce en el visualizador
+			channel.basicConsume(queue, ackMode == AckMode.AUTOMATIC, name == null ? "" : name, consumer::onDelivery,
+					consumer::onCancel);
 			channel.addShutdownListener(consumer::onShutdown);
 			return consumer;
 		}

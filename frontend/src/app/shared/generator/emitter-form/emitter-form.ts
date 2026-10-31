@@ -14,7 +14,7 @@ import { toInterval, validateInterval } from '../interval-validation';
   selector: 'app-emitter-form',
   imports: [ReactiveFormsModule],
   templateUrl: './emitter-form.html',
-  styleUrls: ['../../../features/rabbitmq/shared/lab-area.css', './emitter-form.css'],
+  styleUrls: ['../../lab-area.css', './emitter-form.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EmitterForm {

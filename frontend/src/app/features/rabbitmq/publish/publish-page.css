@@ -1,5 +1,5 @@
 .publish {
-  max-width: 52rem;
+  max-width: 66rem;
 }
 
 .field.wide {
@@ -14,15 +14,15 @@ textarea {
 .fanout {
   margin: 0 0 0.75rem;
   padding: 0.5rem 0.75rem;
-  border-left: 4px solid #1f4fd8;
-  background: #e8eefc;
-  color: #1f3a8a;
+  border-left: 4px solid var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-hover);
 }
 
 .warning {
   margin: 0 0 0.75rem;
   padding: 0.5rem 0.75rem;
-  border-left: 4px solid #f2a900;
+  border-left: 4px solid var(--focus);
   background: #fff8e1;
   color: #5c4300;
   font-weight: 600;

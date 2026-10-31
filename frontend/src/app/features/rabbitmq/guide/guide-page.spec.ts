@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ELEMENTS, GLOSSARY, IDEAS, TOPIC_EXAMPLES, TROUBLES } from './guide-content';
 import { GUIDE_SECTIONS, GuidePage } from './guide-page';
+import { GUIDE_VIEWS, GuideNavigation } from './guide-navigation';
 
 describe('GuidePage', () => {
   let fixture: ComponentFixture<GuidePage>;
@@ -28,7 +29,8 @@ describe('GuidePage', () => {
   it('has an index at the top, labelled for assistive technology (CA-1.3)', () => {
     const nav = page.querySelector('nav.index')!;
     expect(nav.getAttribute('aria-label')).toBe('Índice de la guía');
-    expect(page.querySelector('.guide > :nth-child(3)')).toBe(nav);
+    // va justo después del submenú de partes de la guía
+    expect(page.querySelector('nav.submenu')?.nextElementSibling).toBe(nav);
   });
 
   it('has one index link per section, in order', () => {
@@ -57,6 +59,80 @@ describe('GuidePage', () => {
   it('uses unique ids for the sections', () => {
     const ids = GUIDE_SECTIONS.map((section) => section.id);
     expect(new Set(ids).size).toBe(ids.length);
+  });
+
+  describe('submenu with the parts of the guide (CA-6.1)', () => {
+    const buttons = () => Array.from(page.querySelectorAll<HTMLButtonElement>('nav.submenu button'));
+    const labels = () => buttons().map((b) => b.querySelector('.submenu-label')?.textContent?.trim());
+    const choose = async (index: number) => {
+      buttons()[index].click();
+      fixture.detectChanges();
+      await fixture.whenStable();
+    };
+
+    it('offers the explanation and the three examples, in that order', () => {
+      expect(labels()).toEqual(['Cómo funciona', 'Ejemplo 1: la pizzería', 'Ejemplo 2: la variante', 'Ejemplo 3: con el generador']);
+      expect(page.querySelector('nav.submenu')?.getAttribute('aria-label')).toBe('Partes de la guía');
+    });
+
+    it('starts on the explanation, which keeps the index, the elements and the glossary', () => {
+      expect(buttons()[0].getAttribute('aria-current')).toBe('page');
+      expect(page.querySelector('nav.index')).not.toBeNull();
+      expect(page.querySelector('section#glosario')).not.toBeNull();
+      expect(page.querySelector('app-guide-example')).toBeNull();
+    });
+
+    it.each([
+      [1, 'pizzeria', 'Ejemplo 1: la pizzería', 'Lo que vamos a montar'],
+      [2, 'variante', 'Ejemplo 2: la variante con un exchange fanout', 'exchange fanout'],
+      [3, 'generador', 'Ejemplo 3: con el generador y el flujo en tiempo real', 'el generador'],
+    ])('shows only example %i when chosen', async (index, part, title, text) => {
+      await choose(index);
+
+      expect(page.querySelectorAll('app-guide-example')).toHaveLength(1);
+      expect(page.querySelector('section.guide-section h4')?.textContent).toBe(title);
+      expect(page.querySelector('app-guide-example')?.textContent).toContain(text);
+      expect(page.querySelector('nav.index')).toBeNull();
+      expect(buttons().map((b) => b.getAttribute('aria-current'))).toEqual(
+        buttons().map((_, i) => (i === index ? 'page' : null)),
+      );
+      expect(GUIDE_VIEWS[index].id).toBe(part);
+    });
+
+    it('goes back to the explanation', async () => {
+      await choose(2);
+      await choose(0);
+
+      expect(page.querySelector('nav.index')).not.toBeNull();
+      expect(page.querySelector('app-guide-example')).toBeNull();
+    });
+
+    it('remembers the part when the guide is closed and opened again', async () => {
+      await choose(3);
+      fixture.destroy();
+
+      const again = TestBed.createComponent(GuidePage);
+      again.detectChanges();
+      await again.whenStable();
+
+      expect(TestBed.inject(GuideNavigation).view()).toBe('generador');
+      expect((again.nativeElement as HTMLElement).querySelector('app-guide-example')?.textContent).toContain('el generador');
+    });
+
+    it('does not show anything twice when the same part is chosen again', async () => {
+      await choose(1);
+      await choose(1);
+
+      expect(page.querySelectorAll('app-guide-example')).toHaveLength(1);
+    });
+
+    it('keeps the heading hierarchy in every part: one h3 and sections as h4', async () => {
+      for (let index = 0; index < 4; index++) {
+        await choose(index);
+        expect(page.querySelectorAll('h3')).toHaveLength(1);
+        page.querySelectorAll('section.guide-section > h4').forEach((h) => expect(h.id).toBeTruthy());
+      }
+    });
   });
 
   describe('the elements (CA-2.1)', () => {

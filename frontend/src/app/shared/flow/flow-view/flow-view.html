@@ -1,0 +1,76 @@
+<div class="flow">
+  <div class="feedback" aria-live="polite">
+    @if (store.connection() === 'lost') {
+      <p class="error" role="alert">Se ha cortado la conexión de datos. Se reintenta sola; lo que ya se mostraba se conserva.</p>
+    }
+    @if (store.status(); as status) {
+      @if (status.state === 'DISABLED') {
+        <p class="error" role="alert">{{ status.hint || 'La fuente de datos está desactivada.' }}</p>
+      } @else if (status.state === 'UNAVAILABLE') {
+        <p class="error" role="alert">{{ status.hint || 'El sistema de mensajería no está disponible.' }}</p>
+      }
+    } @else if (store.connection() === 'connecting') {
+      <p class="loading">Conectando con la fuente de datos…</p>
+    }
+  </div>
+
+  <div class="controls create">
+    <div class="field">
+      <label for="flow-filter">Filtrar por nombre o {{ vocabulary().key.toLowerCase() }}</label>
+      <input
+        id="flow-filter"
+        type="text"
+        autocomplete="off"
+        placeholder="Por ejemplo: sensores.*"
+        [value]="filter()"
+        (input)="setFilter($any($event.target).value)"
+      />
+      <p class="help">Admite comodines como los de un topic: «*» sustituye una palabra y «#» varias.</p>
+    </div>
+    <div class="field">
+      <label for="flow-speed">Velocidad de la animación</label>
+      <select id="flow-speed" [value]="speed()" (change)="setSpeed($any($event.target).value)" [disabled]="reducedMotion">
+        @for (option of speeds; track option.value) {
+          <option [value]="option.value">{{ option.label }}</option>
+        }
+      </select>
+    </div>
+    <button type="button" class="secondary" [attr.aria-pressed]="animationPaused()" [disabled]="reducedMotion" (click)="togglePause()">
+      {{ animationPaused() ? 'Reanudar animación' : 'Pausar animación' }}
+    </button>
+  </div>
+
+  @if (reducedMotion) {
+    <p class="help animation-note">
+      Tu sistema pide menos movimiento, así que no hay animación: sigue los mensajes en el registro y en los contadores.
+    </p>
+  } @else if (animationPaused()) {
+    <p class="help animation-note">Animación en pausa: los mensajes se siguen contando y registrando.</p>
+  }
+
+  @if (activeTopology().nodes.length === 0) {
+    <p class="empty">No hay flujo activo ahora mismo. Solo se dibuja lo que ha tenido algún mensaje en los últimos 10 segundos.</p>
+  } @else {
+    <p class="help">Solo se dibuja lo que tiene flujo de datos activo (algún mensaje en los últimos 10 segundos).</p>
+  }
+  @if (activeTopology().nodes.length > 0) {
+    <app-flow-diagram
+      [topology]="activeTopology()"
+      [particles]="particles()"
+      [published]="publishedRates()"
+      [delivered]="deliveredRates()"
+      [ready]="lastTick()?.ready ?? {}"
+      [vocabulary]="vocabulary()"
+    />
+  }
+
+  <app-flow-log
+    [events]="visibleEvents()"
+    [labels]="store.labels()"
+    [vocabulary]="vocabulary()"
+    [omitted]="store.omitted()"
+    (cleared)="store.clearEvents()"
+  />
+
+  <app-flow-charts [ticks]="store.ticks()" [topology]="store.topology()" />
+</div>

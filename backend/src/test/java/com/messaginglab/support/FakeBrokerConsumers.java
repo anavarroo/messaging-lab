@@ -38,6 +38,15 @@ public class FakeBrokerConsumers implements BrokerConsumers {
 		return consumer;
 	}
 
+	/** Nombre con el que se inició el último consumidor, si se indicó. */
+	public String lastName;
+
+	@Override
+	public ConsumerHandle start(String queue, AckMode ackMode, ConsumerListener listener, String name) {
+		lastName = name;
+		return start(queue, ackMode, listener);
+	}
+
 	public static final class FakeConsumer implements ConsumerHandle {
 
 		public final String queue;

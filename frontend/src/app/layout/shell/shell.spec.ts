@@ -15,11 +15,6 @@ describe('Shell', () => {
       label: 'Laboratorio Kafka',
       description: 'Topics, particiones, offsets, productores, consumer groups y lag.',
     },
-    {
-      label: 'Visualizador de flujo',
-      description:
-        'Publicar un mensaje y seguir visualmente su recorrido, las entregas y los errores.',
-    },
   ];
 
   let fixture: ComponentFixture<Shell>;
@@ -85,6 +80,13 @@ describe('Shell', () => {
     ).toBe(false);
   });
 
+  it('has the assistant button at the right of the header, on every screen (spec 06, CA-1.1)', () => {
+    const header = page.querySelector('header.header')!;
+
+    expect(header.querySelector('app-assistant-widget button.toggle')).not.toBeNull();
+    expect(header.querySelector('h1')?.nextElementSibling?.tagName.toLowerCase()).toBe('app-assistant-widget');
+  });
+
   it('navigates to the RabbitMQ lab and marks the section as active (CA-3.1, CA-3.4)', async () => {
     navLink('Laboratorio RabbitMQ').click();
     await settle();
@@ -96,14 +98,12 @@ describe('Shell', () => {
     expect(navLink('Estado').classList).not.toContain('active');
   });
 
-  it('keeps only the Kafka lab and the flow visualizer disabled (CA-3.2)', () => {
-    expect(disabledButtons().map((button) => button.querySelector('.label')?.textContent)).toEqual([
-      'Laboratorio Kafka',
-      'Visualizador de flujo',
-    ]);
+  it('keeps only the Kafka lab disabled; the flow visualizer lives inside each lab (CA-1.2)', () => {
+    expect(disabledButtons().map((button) => button.querySelector('.label')?.textContent)).toEqual(['Laboratorio Kafka']);
+    expect(page.textContent).not.toContain('Visualizador de flujo');
   });
 
-  it('shows the two future sections disabled with their description', () => {
+  it('shows the future section disabled with its description', () => {
     const buttons = disabledButtons();
 
     expect(buttons).toHaveLength(disabledSections.length);

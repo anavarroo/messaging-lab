@@ -11,6 +11,8 @@ import { ApiError } from '../../../core/http/api-error';
 import { RabbitMqConnection } from '../connection/rabbitmq-connection';
 import { BindingsApi } from '../bindings/bindings-api';
 import { ExchangesApi } from '../exchanges/exchanges-api';
+import { FakeEventSource } from '../../../testing/fake-event-source';
+import { EVENT_SOURCE_FACTORY } from '../consumers/event-source-factory';
 import { GeneratorApi } from '../generator/generator-api';
 import { PublishApi } from '../publish/publish-api';
 import { QueuesApi } from '../queues/queues-api';
@@ -19,7 +21,7 @@ import { RabbitMqLab } from './rabbitmq-lab';
 describe('RabbitMqLab', () => {
   const exchangesList = vi.fn(() => NEVER);
   const STATUS = '/api/rabbitmq/status';
-  const AREAS = ['Guía', 'Exchanges', 'Colas', 'Bindings', 'Publicación', 'Consumidores', 'Generador'];
+  const AREAS = ['Guía', 'Exchanges', 'Colas', 'Bindings', 'Publicación', 'Consumidores', 'Generador', 'Flujo'];
 
   let harness: RouterTestingHarness;
   let router: Router;
@@ -39,6 +41,7 @@ describe('RabbitMqLab', () => {
         { provide: QueuesApi, useValue: { list: () => NEVER } },
         { provide: BindingsApi, useValue: { list: () => NEVER } },
         { provide: PublishApi, useValue: {} },
+        { provide: EVENT_SOURCE_FACTORY, useValue: (url: string) => new FakeEventSource(url) },
         { provide: GeneratorApi, useValue: { listEmitters: () => NEVER, getSettings: () => NEVER, listConsumers: () => NEVER, listTemplates: () => NEVER } },
       ],
     });
@@ -109,7 +112,7 @@ describe('RabbitMqLab', () => {
     expect(page.querySelector('app-exchanges-page')).not.toBeNull();
   });
 
-  it('offers the guide plus the five areas and navigates between all of them', async () => {
+  it('offers the guide plus the six areas and navigates between all of them', async () => {
     await enter();
     await connect();
 
@@ -122,6 +125,7 @@ describe('RabbitMqLab', () => {
       ['/rabbitmq/publish', 'app-publish-page'],
       ['/rabbitmq/consumers', 'app-consumers-page'],
       ['/rabbitmq/generator', 'app-generator-page'],
+      ['/rabbitmq/flow', 'app-rabbitmq-flow-page'],
     ];
     for (const [index, [url, selector]] of expected.entries()) {
       tabs()[index].click();
@@ -131,6 +135,8 @@ describe('RabbitMqLab', () => {
       expect(router.url).toBe(url);
       expect(page.querySelector(selector)).not.toBeNull();
       expect(tabs()[index].getAttribute('aria-current')).toBe('page');
+      // el visualizador pide su historial al abrirse; esa pantalla se prueba aparte
+      http.match((request) => request.url.startsWith('/api/rabbitmq/flow'));
     }
   });
 

@@ -36,7 +36,7 @@ const OUTCOME_TEXTS: Record<ActionOutcome, string> = {
   selector: 'app-consumers-page',
   imports: [ReactiveFormsModule],
   templateUrl: './consumers-page.html',
-  styleUrls: ['../../shared/lab-area.css', './consumers-page.css'],
+  styleUrls: ['../../../../shared/lab-area.css', './consumers-page.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConsumersPage implements OnInit {

@@ -1,0 +1,139 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.scroll {
+  max-height: 22rem;
+  overflow: auto;
+  border: 1px solid var(--flow-border, var(--border));
+  border-radius: 6px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+th,
+td {
+  padding: 0.3rem 0.5rem;
+  text-align: left;
+  border-bottom: 1px solid var(--flow-border, var(--border));
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background: var(--flow-surface, #fff);
+}
+
+.number {
+  text-align: right;
+}
+
+.time,
+.key {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+tr.selected {
+  background: var(--flow-selected, var(--primary-soft));
+}
+
+.badge {
+  display: inline-block;
+  margin-left: 0.35rem;
+  padding: 0 0.4rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.75rem;
+}
+
+.unrouted-badge {
+  color: var(--flow-unrouted, var(--danger));
+  font-weight: 600;
+}
+
+.notice {
+  margin: 0.5rem 0;
+  padding: 0.4rem 0.75rem;
+  border-left: 4px solid var(--warning);
+  background: var(--flow-notice, var(--warning-soft));
+  color: inherit;
+}
+
+.empty {
+  margin: 0.75rem 0;
+  font-weight: 600;
+}
+
+.help {
+  margin: 0.4rem 0;
+  font-size: 0.9rem;
+}
+
+.detail {
+  margin-top: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--flow-border, var(--border));
+  border-radius: 6px;
+}
+
+pre {
+  margin: 0.25rem 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  overflow: auto;
+  max-height: 14rem;
+  background: var(--flow-code, var(--surface-2));
+  border-radius: 4px;
+  font-size: 0.85rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ---- pulido visual ---- */
+.header {
+  margin-top: var(--space-5);
+  margin-bottom: var(--space-3);
+}
+
+.header h4 {
+  margin: 0;
+}
+
+.scroll {
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+  background: var(--surface);
+}
+
+.scroll table {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.detail {
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}

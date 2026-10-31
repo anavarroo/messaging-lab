@@ -28,7 +28,7 @@ const OWN_DEAD_LETTER_QUEUE = 'Una cola no puede ser su propia dead-letter queue
   selector: 'app-queues-page',
   imports: [ReactiveFormsModule, ConfirmDialog, QueueMessagesPanel],
   templateUrl: './queues-page.html',
-  styleUrls: ['../shared/lab-area.css', './queues-page.css'],
+  styleUrls: ['../../../shared/lab-area.css', './queues-page.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QueuesPage implements OnInit {

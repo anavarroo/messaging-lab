@@ -57,6 +57,13 @@ class SimulatedConsumerServiceTest {
 	// ---- procesar
 
 	@Test
+	void startsTheConsumerWithItsNameSoItCanBeRecognisedInTheFlowVisualizer() {
+		started(spec("cocinero", 100, 0, FailureAction.REJECT));
+
+		assertThat(broker.lastName).isEqualTo("cocinero");
+	}
+
+	@Test
 	void consumesTheQueueInManualModeSoItHoldsOneMessageAtATime() {
 		started(spec("c", 100, 0, FailureAction.REJECT));
 

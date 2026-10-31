@@ -82,6 +82,8 @@
 							<!-- el flujo de eventos se implementa con SseEmitter, no con un modelo generado -->
 							<schemaMappings>
 								<schemaMapping>ConsumerEventStream=org.springframework.web.servlet.mvc.method.annotation.SseEmitter</schemaMapping>
+								<schemaMapping>FlowEventStream=org.springframework.web.servlet.mvc.method.annotation.SseEmitter</schemaMapping>
+								<schemaMapping>AssistantEventStream=org.springframework.web.servlet.mvc.method.annotation.SseEmitter</schemaMapping>
 							</schemaMappings>
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>

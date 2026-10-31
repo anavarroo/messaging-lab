@@ -9,6 +9,8 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { BackendStatus } from '../../../core/status/backend-status';
 import { StatusApiService, StatusError } from '../../../core/status/status-api.service';
+import { AssistantStatusCard } from '../assistant-status/assistant-status';
+import { RabbitMqStatus } from '../rabbitmq-status/rabbitmq-status';
 
 type StatusState =
   | { kind: 'loading'; retrying: boolean }
@@ -19,6 +21,7 @@ const GENERIC_ERROR = 'No se ha podido obtener el estado del backend.';
 
 @Component({
   selector: 'app-status-page',
+  imports: [RabbitMqStatus, AssistantStatusCard],
   templateUrl: './status-page.html',
   styleUrl: './status-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

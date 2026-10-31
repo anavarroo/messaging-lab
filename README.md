@@ -135,7 +135,7 @@ Los exchanges, las colas, los bindings y los mensajes se guardan en un volumen d
 
 ## Comprobar que funciona
 
-1. Abre <http://localhost:4200>. Debes ver la cabecera `messaging-lab`, el menú y, en la vista **Estado del backend**: **Disponible**, la aplicación `messaging-lab-backend` y la versión `0.1.0`.
+1. Abre <http://localhost:4200>. Debes ver la cabecera `messaging-lab`, el menú y, en la vista **Estado**: el backend **Disponible** (la aplicación `messaging-lab-backend` y la versión `0.1.0`) y, debajo, el **Estado de RabbitMQ**: si está **levantado** (con su versión) y si el **trazado** está activo (`tracing: true`) o desactivado, con cómo activarlo. El botón «Volver a comprobar» repite la comprobación.
 2. Comprueba la API directamente:
 
    ```bash
@@ -145,6 +145,10 @@ Los exchanges, las colas, los bindings y los mensajes se guardan en un volumen d
    Respuesta esperada: `{"status":"AVAILABLE","name":"messaging-lab-backend","version":"0.1.0"}`
 
 3. Comprueba el comportamiento ante un fallo: detén el backend y recarga la página. Debe aparecer **«El backend no está disponible.»** con un botón **Reintentar**. Vuelve a arrancar el backend y pulsa el botón: la interfaz mostrará el estado sin recargar la página.
+
+### La guía del Laboratorio RabbitMQ
+
+La pestaña **Guía** está pensada para quien no conoce RabbitMQ y se lee sin necesidad de que RabbitMQ esté disponible. Tiene un submenú con cuatro partes: **Cómo funciona** (qué es cada pieza, los tipos de exchange, glosario y qué hacer si algo falla), **Ejemplo 1: la pizzería** (paso a paso, a mano), **Ejemplo 2: la variante** (un aviso para todos con un exchange fanout) y **Ejemplo 3: con el generador** (mensajes continuos, por un exchange y directamente a una cola, vistos en tiempo real desde la pestaña Flujo). La guía recuerda la parte que estabas leyendo al ir a otra pestaña y volver.
 
 ### Escenario guiado del Laboratorio RabbitMQ
 
@@ -195,6 +199,41 @@ La pestaña **Generador** del Laboratorio RabbitMQ publica mensajes sin parar, c
 **Dos tipos de consumidor.** Los *simulados* (Generador) consumen solos en el servidor. Los *de sesión* (Consumidores) los controlas tú mensaje a mensaje y se detienen al cerrar la pestaña.
 
 Contrato: operaciones `/api/rabbitmq/generator/*` en [`backend/api/api.yml`](backend/api/api.yml). Especificación: [`specs/04-rabbitmq-traffic-generator/`](specs/04-rabbitmq-traffic-generator/).
+
+### Flujo en tiempo real (visualizador)
+
+La pestaña **Flujo** del Laboratorio RabbitMQ muestra, con datos reales, cómo viaja cada mensaje: quién publica, por qué exchange pasa, a qué colas llega y qué consumidor lo recibe. Es la forma de *ver* lo que el generador produce a mucha velocidad.
+
+- **Diagrama animado:** publicadores → exchanges → colas → consumidores, con el ritmo de cada uno y los mensajes listos de cada cola. Solo se dibuja lo que tiene **flujo activo** (algún mensaje en los últimos 10 segundos): lo que se queda quieto desaparece y vuelve a salir cuando pasa un mensaje por él. Un punto recorre el camino de cada mensaje; una publicación que no llega a ninguna cola se dibuja como un cuadrado que se desvanece en el exchange. Se puede **pausar** y **ralentizar** (hasta ÷10) para seguir un mensaje con calma, y si tu sistema pide menos movimiento no hay animación (se sigue en el registro).
+- **Registro de eventos:** los últimos eventos con su recorrido, routing key y tamaño; al abrir un evento se ve el cuerpo y las cabeceras. Se puede pausar y limpiar.
+- **Filtro:** por nombre de exchange o cola, o por routing key, con los comodines de un topic (`*` una palabra, `#` varias).
+- **Gráficas:** mensajes por segundo (publicados y entregados) y mensajes listos de las colas elegidas, de los últimos 2 minutos. Con un emisor más rápido que su consumidor se ve crecer la cola.
+- Con mucho tráfico se animan y listan como máximo 50 eventos por segundo (lo omitido se indica); los contadores y las gráficas son exactos.
+
+**Qué es el trazado.** Los datos salen del *trazado* (*firehose*) de RabbitMQ: cuando está activo, RabbitMQ copia cada publicación y cada entrega a un exchange interno (`amq.rabbitmq.trace`), y el backend lo escucha solo mientras haya una pantalla de Flujo abierta. Por eso se ve también el tráfico de otras aplicaciones que usen el mismo RabbitMQ. Ten en cuenta que **duplica cada mensaje dentro de RabbitMQ**: es útil en un laboratorio, no en producción.
+
+**Activarlo y desactivarlo.**
+
+- Con el Docker Compose del proyecto, RabbitMQ arranca con el trazado activado y lo mantiene (también tras reiniciarlo). Si ya tenías el contenedor creado antes de añadirse esto, recréalo con `docker compose -f infra/docker-compose.yml up -d`: los datos se conservan porque el volumen es el mismo.
+- Con otro RabbitMQ, o para activarlo a mano: `rabbitmqctl trace_on` (con Docker: `docker compose -f infra/docker-compose.yml exec rabbitmq rabbitmqctl trace_on`). Se pierde al reiniciar RabbitMQ.
+- Para desactivarlo: `docker compose -f infra/docker-compose.yml exec rabbitmq rabbitmqctl trace_off`. Aviso: el Compose lo vuelve a activar a los pocos segundos; para quitarlo de forma permanente, usa otro arranque de RabbitMQ.
+- Si el trazado está desactivado, la pantalla lo dice y muestra el comando; en cuanto se activa, empieza a mostrar datos sin recargar.
+
+**Limitaciones.** El trazado solo registra publicaciones y entregas: no muestra confirmaciones, rechazos ni reencolados individuales (su efecto se ve en la gráfica de mensajes listos). Las conexiones nuevas tardan unos segundos en mostrar el nombre que puso su cliente; mientras tanto se ve el de RabbitMQ (dirección de origen y destino).
+
+**Reutilizarlo en otro laboratorio.** El visualizador está hecho para usarse tal cual en otros laboratorios (por ejemplo, Kafka). Lo compartido está en `frontend/src/app/shared/flow` (modelo, diagrama, registro, gráficas y `FlowView`) y en el paquete `com.messaginglab.flow` del backend, sin ninguna referencia a RabbitMQ. Un laboratorio nuevo solo aporta una fuente de datos que implemente `FlowSource` (frontend) y los puertos `FlowSource` y `FlowTopologyProvider` (backend), más una pestaña «Flujo» con `<app-flow-view>`. Contrato: operaciones `/api/rabbitmq/flow/*` en [`backend/api/api.yml`](backend/api/api.yml). Especificación: [`specs/05-flow-visualizer/`](specs/05-flow-visualizer/).
+
+### Asistente de IA
+
+El icono de chat a la derecha de la cabecera abre un asistente que responde en español a preguntas sobre el laboratorio: qué es cada pieza, por qué crece una cola, si el trazado está activo… Usa un **modelo de IA local** (qwen2.5:3b servido por Ollama): sin claves, sin coste y sin que salga ningún dato de tu máquina. Es de **solo lectura**: si le pides una acción, te dice dónde hacerla.
+
+- El backend le entrega en cada pregunta el estado real ya resumido y las conclusiones calculadas por reglas (por ejemplo, «la cola cocina crece porque entran 10 y salen 5»); el modelo solo las explica. El resumen general («¿está todo bien?») lo da el backend directamente.
+- **Se levanta con el Docker Compose.** La primera vez descarga la imagen de Ollama (unos 7 GB) y el modelo (unos 2 GB); mientras tanto, el asistente y la pantalla «Estado» dicen que se está preparando.
+- **Memoria:** unos 2,5 GB mientras responde; tras 5 minutos sin preguntas el modelo se descarga y vuelve a casi 0.
+- **No levantarlo:** pon `OLLAMA_REPLICAS=0` en `infra/.env` o delante del comando (`OLLAMA_REPLICAS=0 docker compose -f infra/docker-compose.yml up -d --build`). Todo lo demás funciona igual.
+- **Otro modelo u Ollama nativo** (más rápido en un Mac con chip Apple, porque dentro de Docker solo usa CPU): variables `ASSISTANT_MODEL` y `ASSISTANT_URL` (ver `infra/.env.example`). Si arrancas el backend en local, por defecto busca Ollama en `http://localhost:11434`.
+
+Especificación: [`specs/06-ai-assistant/`](specs/06-ai-assistant/).
 
 ## Pruebas
 

@@ -33,7 +33,7 @@ type Outcome = { routed: boolean; exchange: string };
   selector: 'app-publish-page',
   imports: [ReactiveFormsModule],
   templateUrl: './publish-page.html',
-  styleUrls: ['../shared/lab-area.css', './publish-page.css'],
+  styleUrls: ['../../../shared/lab-area.css', './publish-page.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PublishPage implements OnInit {

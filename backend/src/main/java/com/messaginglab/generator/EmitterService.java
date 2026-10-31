@@ -233,7 +233,7 @@ public final class EmitterService {
 			return;
 		}
 		emitter.lastBody = body;
-		boolean routed = publisher.publish(emitter.spec.destination(), body);
+		boolean routed = publisher.publish(emitter.spec.destination(), body, emitter.spec.name());
 		emitter.published++;
 		if (!routed) {
 			emitter.unrouted++;

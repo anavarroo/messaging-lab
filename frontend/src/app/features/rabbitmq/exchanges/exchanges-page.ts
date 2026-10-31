@@ -44,7 +44,7 @@ const TYPES: readonly TypeOption[] = [
   selector: 'app-exchanges-page',
   imports: [ReactiveFormsModule, ConfirmDialog],
   templateUrl: './exchanges-page.html',
-  styleUrls: ['../shared/lab-area.css', './exchanges-page.css'],
+  styleUrls: ['../../../shared/lab-area.css', './exchanges-page.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ExchangesPage implements OnInit {

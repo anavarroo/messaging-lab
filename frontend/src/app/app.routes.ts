@@ -3,7 +3,6 @@ import { BindingsPage } from './features/rabbitmq/bindings/bindings-page';
 import { RabbitMqConnection } from './features/rabbitmq/connection/rabbitmq-connection';
 import { ConsumerSessionService } from './features/rabbitmq/consumers/consumer-session.service';
 import { ConsumersPage } from './features/rabbitmq/consumers/consumers-page/consumers-page';
-import { GuidePage } from './features/rabbitmq/guide/guide-page';
 import { ExchangesPage } from './features/rabbitmq/exchanges/exchanges-page';
 import { PublishPage } from './features/rabbitmq/publish/publish-page';
 import { QueuesPage } from './features/rabbitmq/queues/queues-page';
@@ -23,13 +22,18 @@ export const routes: Routes = [
     canDeactivate: [(lab: RabbitMqLab) => lab.confirmLeave()],
     children: [
       { path: '', redirectTo: 'exchanges', pathMatch: 'full' },
-      { path: 'guide', component: GuidePage },
+      // la guía es contenido extenso y estático: se descarga al abrirla
+      { path: 'guide', loadComponent: () => import('./features/rabbitmq/guide/guide-page').then((m) => m.GuidePage) },
       { path: 'exchanges', component: ExchangesPage },
       { path: 'queues', component: QueuesPage },
       { path: 'bindings', component: BindingsPage },
       { path: 'publish', component: PublishPage },
       { path: 'consumers', component: ConsumersPage },
       // el generador es la pantalla más pesada y la menos usada: se descarga al abrirla
+      {
+        path: 'flow',
+        loadComponent: () => import('./features/rabbitmq/flow/rabbitmq-flow-page').then((m) => m.RabbitMqFlowPage),
+      },
       {
         path: 'generator',
         loadComponent: () => import('./features/rabbitmq/generator/generator-page').then((m) => m.GeneratorPage),

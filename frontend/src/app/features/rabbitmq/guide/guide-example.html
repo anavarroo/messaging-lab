@@ -1,35 +1,113 @@
 <div class="example">
-  <p>
-    Vas a montar una pizzería de verdad en este laboratorio, con tus propias manos. No tienes que saber nada de
-    antemano: cada paso te dice <strong>qué hacer</strong>, <strong>qué deberías ver</strong> y
-    <strong>qué ha pasado</strong>. Si lo que ves no se parece a lo que dice, mira la sección «Si algo no sale como
-    esperas».
-  </p>
+  @switch (part()) {
+    @case ('pizzeria') {
+      <p>
+        Vas a montar una pizzería de verdad en este laboratorio, con tus propias manos. No tienes que saber nada de
+        antemano: cada paso te dice <strong>qué hacer</strong>, <strong>qué deberías ver</strong> y
+        <strong>qué ha pasado</strong>. Si lo que ves no se parece a lo que dice, mira «Si algo no sale como esperas»
+        en la parte «Cómo funciona».
+      </p>
 
-  <div class="plan">
-    <h5>Lo que vamos a montar</h5>
-    <ul>
-      <li>
-        Un exchange <code>{{ names.exchange }}</code> de tipo topic: la oficina que clasifica los pedidos.
-      </li>
-      <li>
-        Una cola <code>{{ names.kitchen }}</code> para los pedidos de pizza, con una cola
-        <code>{{ names.kitchenDlq }}</code> donde irán los pedidos rechazados.
-      </li>
-      <li>
-        Una cola <code>{{ names.bar }}</code> para los pedidos de bebida, sin cola de fallidos.
-      </li>
-      <li>
-        Dos reglas (bindings): <code>{{ names.pizzaKey }}</code> a la cocina y <code>{{ names.drinkKey }}</code> a la
-        barra.
-      </li>
-    </ul>
-  </div>
+      <div class="plan">
+        <h5>Lo que vamos a montar</h5>
+        <ul>
+          <li>
+            Un exchange <code>{{ names.exchange }}</code> de tipo topic: la oficina que clasifica los pedidos.
+          </li>
+          <li>
+            Una cola <code>{{ names.kitchen }}</code> para los pedidos de pizza, con una cola
+            <code>{{ names.kitchenDlq }}</code> donde irán los pedidos rechazados.
+          </li>
+          <li>
+            Una cola <code>{{ names.bar }}</code> para los pedidos de bebida, sin cola de fallidos.
+          </li>
+          <li>
+            Dos reglas (bindings): <code>{{ names.pizzaKey }}</code> a la cocina y <code>{{ names.drinkKey }}</code> a la
+            barra.
+          </li>
+        </ul>
+      </div>
+      <ng-container *ngTemplateOutlet="tips" />
 
+      @for (step of steps(); track step.id) {
+        <ng-container *ngTemplateOutlet="stepTemplate; context: { $implicit: step }" />
+      }
+
+      <p class="done">
+        <strong>¡Lo has conseguido!</strong> Has publicado mensajes, los has visto llegar (y no llegar), has
+        confirmado, devuelto y rechazado, y has seguido un mensaje hasta la cola de fallidos. Eso es, en esencia, todo
+        RabbitMQ. Sigue con el <strong>ejemplo 2</strong> para ver otra forma de repartir los mensajes.
+      </p>
+    }
+    @case ('variante') {
+      <p>
+        Hasta ahora cada pedido iba a una sola cola. Con un exchange <strong>fanout</strong>, un mismo mensaje llega a
+        todas. Comprueba la diferencia. <strong>Necesitas haber hecho el ejemplo 1</strong>: usa sus colas
+        <code>{{ names.kitchen }}</code> y <code>{{ names.bar }}</code>.
+      </p>
+      <ng-container *ngTemplateOutlet="tips" />
+
+      @for (step of steps(); track step.id) {
+        <ng-container *ngTemplateOutlet="stepTemplate; context: { $implicit: step }" />
+      }
+
+      <h5 class="group">Opcional: dejar el laboratorio limpio</h5>
+      <p>Cuando termines con los ejemplos 1 y 2, puedes borrar lo que has creado. Es opcional: no pasa nada si lo dejas.</p>
+      @for (step of cleanupSteps(); track step.id) {
+        <ng-container *ngTemplateOutlet="stepTemplate; context: { $implicit: step }" />
+      }
+    }
+    @case ('generador') {
+      <p>
+        En los ejemplos anteriores publicabas tú, a mano. Aquí vas a dejar que <strong>el generador</strong> publique
+        mensajes sin parar, como haría un sensor o un robot, y vas a <strong>verlos viajar en tiempo real</strong> desde
+        la pestaña «Flujo». Este ejemplo es independiente de los otros dos: crea sus propios elementos.
+      </p>
+
+      <div class="plan">
+        <h5>Lo que vamos a montar</h5>
+        <ul>
+          <li>
+            Un exchange <code>{{ names.sensors }}</code> y una cola <code>{{ names.readings }}</code>, enlazados con el
+            patrón <code>{{ names.sensorPattern }}</code>.
+          </li>
+          <li>
+            Un emisor <code>{{ names.temperatureEmitter }}</code> que publica en el exchange (el camino «normal»).
+          </li>
+          <li>
+            Un consumidor simulado <code>{{ names.reader }}</code> que vacía la cola.
+          </li>
+          <li>
+            Un emisor <code>{{ names.robotEmitter }}</code> que publica directamente en la cola, más rápido de lo que el
+            consumidor puede retirar.
+          </li>
+        </ul>
+      </div>
+      <ng-container *ngTemplateOutlet="tips" />
+
+      @for (step of steps(); track step.id) {
+        <ng-container *ngTemplateOutlet="stepTemplate; context: { $implicit: step }" />
+      }
+
+      <h5 class="group">Opcional: dejar el laboratorio limpio</h5>
+      @for (step of cleanupSteps(); track step.id) {
+        <ng-container *ngTemplateOutlet="stepTemplate; context: { $implicit: step }" />
+      }
+
+      <p class="done">
+        <strong>¡Listo!</strong> Has visto a un emisor publicar por un exchange y otro directamente en una cola, a un
+        consumidor vaciarla y a una cola crecer cuando se publica más rápido de lo que se consume, todo con datos
+        reales y en directo.
+      </p>
+    }
+  }
+</div>
+
+<ng-template #tips>
   <div class="tips">
     <h5>Antes de empezar</h5>
     <ul>
-      <li>El laboratorio debe poner «Conectado» arriba. Si no, sigue los consejos de «Si algo no sale como esperas».</li>
+      <li>El laboratorio debe poner «Conectado» arriba. Si no, mira «Si algo no sale como esperas» en «Cómo funciona».</li>
       <li>
         <strong>Escribe los nombres exactamente como aparecen aquí</strong>, en el formato de
         <code>código</code>. Puedes copiarlos.
@@ -40,33 +118,7 @@
       </li>
     </ul>
   </div>
-
-  <h5 class="group">Parte 1. La pizzería</h5>
-  @for (step of mainSteps; track step.id) {
-    <ng-container *ngTemplateOutlet="stepTemplate; context: { $implicit: step }" />
-  }
-
-  <h5 class="group">Parte 2. Variante: un aviso para todos con un exchange fanout</h5>
-  <p>
-    Hasta ahora cada pedido iba a una sola cola. Con un exchange fanout, un mismo mensaje llega a todas. Comprueba
-    la diferencia:
-  </p>
-  @for (step of fanoutSteps; track step.id) {
-    <ng-container *ngTemplateOutlet="stepTemplate; context: { $implicit: step }" />
-  }
-
-  <h5 class="group">Parte 3. Opcional: dejar el laboratorio limpio</h5>
-  <p>Cuando termines, puedes borrar lo que has creado. Es opcional: no pasa nada si lo dejas.</p>
-  @for (step of cleanupSteps; track step.id) {
-    <ng-container *ngTemplateOutlet="stepTemplate; context: { $implicit: step }" />
-  }
-
-  <p class="done">
-    <strong>¡Lo has conseguido!</strong> Has publicado mensajes, los has visto llegar (y no llegar), has
-    confirmado, devuelto y rechazado, y has seguido un mensaje hasta la cola de fallidos. Eso es, en esencia, todo
-    RabbitMQ.
-  </p>
-</div>
+</ng-template>
 
 <ng-template #stepTemplate let-step>
   <article class="step" [id]="'paso-' + step.id" [attr.aria-labelledby]="'paso-' + step.id + '-title'">

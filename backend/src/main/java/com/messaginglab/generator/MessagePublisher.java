@@ -19,4 +19,9 @@ public interface MessagePublisher {
 	 */
 	boolean publish(Destination destination, String body);
 
+	/** Igual que {@link #publish(Destination, String)}, indicando quién publica, si el sistema permite señalarlo. */
+	default boolean publish(Destination destination, String body, String source) {
+		return publish(destination, body);
+	}
+
 }

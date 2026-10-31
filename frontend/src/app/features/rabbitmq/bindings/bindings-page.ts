@@ -23,7 +23,7 @@ const TYPE_LABELS: Record<ExchangeType, string> = { DIRECT: 'Direct', FANOUT: 'F
   selector: 'app-bindings-page',
   imports: [ReactiveFormsModule],
   templateUrl: './bindings-page.html',
-  styleUrls: ['../shared/lab-area.css', './bindings-page.css'],
+  styleUrls: ['../../../shared/lab-area.css', './bindings-page.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class BindingsPage implements OnInit {

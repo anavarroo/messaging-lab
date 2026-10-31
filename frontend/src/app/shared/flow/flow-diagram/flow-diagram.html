@@ -1,0 +1,32 @@
+<svg
+  class="diagram"
+  role="img"
+  [attr.aria-label]="summary()"
+  [attr.viewBox]="'0 0 ' + layout().width + ' ' + layout().height"
+  preserveAspectRatio="xMidYMin meet"
+>
+  <title>{{ summary() }}</title>
+  @for (edge of edges(); track edge.key) {
+    <path class="edge" [attr.d]="edgePath(edge)">
+      @if (edge.label) {
+        <title>{{ edge.label }}</title>
+      }
+    </path>
+  }
+  @for (item of nodes(); track item.node.id) {
+    <g class="node" [class]="'node ' + item.node.kind.toLowerCase()" [attr.transform]="'translate(' + (item.x - nodeWidth / 2) + ' ' + (item.y - nodeHeight / 2) + ')'">
+      <title>{{ item.node.label }} — {{ item.caption }} — {{ item.detail }}</title>
+      <rect [attr.width]="nodeWidth" [attr.height]="nodeHeight" rx="6" />
+      <text class="label" x="10" y="18">{{ clip(item.node.label) }}</text>
+      <text class="caption" x="10" y="34">{{ item.caption }}</text>
+      <text class="numbers" [attr.x]="nodeWidth - 10" y="34" text-anchor="end">{{ item.detail }}</text>
+    </g>
+  }
+  @for (dot of dots(); track dot.key) {
+    @if (dot.unrouted) {
+      <rect class="dot unrouted" [attr.x]="dot.x - 5" [attr.y]="dot.y - 5" width="10" height="10" [attr.opacity]="dot.opacity" />
+    } @else {
+      <circle class="dot" [attr.cx]="dot.x" [attr.cy]="dot.y" r="5" />
+    }
+  }
+</svg>

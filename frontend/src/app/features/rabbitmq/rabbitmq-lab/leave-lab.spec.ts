@@ -68,7 +68,11 @@ describe('leaving the RabbitMQ lab with consumers (CA-9.14)', () => {
     session = harness.routeDebugElement!.injector.get(ConsumerSessionService);
   });
 
-  afterEach(() => http.verify());
+  afterEach(() => {
+    // al salir del laboratorio se abre la pantalla de estado, que comprueba RabbitMQ; eso se prueba aparte
+    http.match((request) => request.url.startsWith('/api/') && request.url.endsWith('/status'));
+    http.verify();
+  });
 
   async function startConsumer(name: string, queue = 'pedidos') {
     const pending = firstValueFrom(session.start(name, queue, 'MANUAL'));

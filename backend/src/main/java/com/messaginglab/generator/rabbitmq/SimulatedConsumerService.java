@@ -206,7 +206,7 @@ public final class SimulatedConsumerService {
 		private synchronized void start() {
 			resetCounters();
 			token++;
-			handle = broker.start(spec.queue(), AckMode.MANUAL, this);
+			handle = broker.start(spec.queue(), AckMode.MANUAL, this, spec.name());
 			status = Status.RUNNING;
 		}
 

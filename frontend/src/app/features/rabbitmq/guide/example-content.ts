@@ -14,6 +14,14 @@ export const NAMES = {
   dessertKey: 'pedido.postre',
   cook: 'cocinero-1',
   barista: 'barista-1',
+  // ejemplo 3, con el generador
+  sensors: 'sensores',
+  readings: 'lecturas',
+  sensorPattern: 'planta1.sensor.#',
+  sensorKey: 'planta1.sensor.temperatura.sala2',
+  temperatureEmitter: 'Sensor de temperatura',
+  robotEmitter: 'Brazo robótico',
+  reader: 'lector-1',
 } as const;
 
 const N = NAMES;
@@ -371,8 +379,209 @@ export const CLEANUP_STEPS: readonly ExampleStep[] = [
   },
 ];
 
+/**
+ * Ejemplo 3: tráfico continuo con el generador, visto en tiempo real desde «Flujo». Es independiente de los otros dos:
+ * crea sus propios exchange y cola.
+ */
+export const GENERATOR_STEPS: readonly ExampleStep[] = [
+  {
+    id: 'gen-exchange',
+    title: 'Crea el exchange de los sensores',
+    link: area('Exchanges', 'exchanges'),
+    actions: [`En «Nombre», escribe [[${N.sensors}]].`, 'En «Tipo», elige [[Topic]].', 'Pulsa «Crear exchange».'],
+    shouldSee: [`Un aviso verde: «Exchange «${N.sensors}» creado.»`],
+    whatHappened: 'Es la oficina por la que pasarán las lecturas de los sensores.',
+  },
+  {
+    id: 'gen-cola',
+    title: 'Crea la cola de las lecturas',
+    link: area('Colas', 'queues'),
+    actions: [`En «Nombre», escribe [[${N.readings}]].`, 'Deja «Dead-letter queue» sin elegir.', 'Pulsa «Crear cola».'],
+    shouldSee: [`Un aviso: «Cola «${N.readings}» creada.»`, `Una fila nueva con [[${N.readings}]] y todos los contadores a 0.`],
+    whatHappened: 'Aquí se irán acumulando las lecturas hasta que alguien las consuma.',
+  },
+  {
+    id: 'gen-binding',
+    title: 'Enlaza el exchange con la cola',
+    link: area('Bindings', 'bindings'),
+    actions: [
+      `Crea un binding de [[${N.sensors}]] a [[${N.readings}]].`,
+      `En «Routing key», escribe [[${N.sensorPattern}]].`,
+      'Pulsa «Crear binding».',
+    ],
+    shouldSee: ['Un aviso de «Binding creado…» y una fila nueva con ese patrón.'],
+    whatHappened:
+      'El patrón dice: «a esta cola, todo lo que empiece por planta1.sensor.». El «#» sustituye a cualquier número de palabras.',
+  },
+  {
+    id: 'gen-flujo-vacio',
+    title: 'Abre «Flujo» antes de que pase nada',
+    link: area('Flujo', 'flow'),
+    actions: ['Entra en la pestaña «Flujo» y déjala abierta en otra pestaña del navegador, o vuelve aquí después de cada paso.'],
+    shouldSee: [
+      'El mensaje «No hay flujo activo ahora mismo…» y, debajo, el registro vacío («Aún no ha pasado ningún mensaje.»).',
+      'Si en cambio sale un aviso rojo diciendo que el trazado está desactivado, sigue las instrucciones que da: es lo que alimenta esta pantalla.',
+    ],
+    whatHappened:
+      'Esta pantalla solo dibuja lo que tiene mensajes pasando por él ahora mismo. Como todavía no hay ninguno, no hay nada que dibujar.',
+  },
+  {
+    id: 'gen-emisor-exchange',
+    title: 'Crea un emisor que publica en el exchange',
+    link: area('Generador', 'generator'),
+    actions: [
+      `En el panel «Emisores», en «Nuevo emisor», elige en «Plantilla del catálogo» [[${N.temperatureEmitter}]] y pulsa «Usar plantilla».`,
+      'Pulsa «Vista previa» para ver un mensaje de ejemplo: cada vez lleva valores distintos.',
+      `En «Destino» deja marcado «A un exchange» y elige [[${N.sensors}]] en «Exchange».`,
+      `Comprueba que «Routing key» ha quedado como [[${N.sensorKey}]] y que la frecuencia es fija, cada [[1000]] ms.`,
+      'Pulsa «Crear emisor» y, en la lista de emisores, «Iniciar».',
+    ],
+    shouldSee: [
+      `Un aviso: «Emisor «${N.temperatureEmitter}» creado. Está parado…»`,
+      'Tras «Iniciar», su tarjeta dice [[En marcha]] y sus «Publicados» suben cada segundo, con un «Ritmo real» de 1 por segundo.',
+    ],
+    whatHappened:
+      'El emisor corre en el servidor: seguirá publicando aunque cambies de pestaña, hasta que lo pares. Cada mensaje sale con la routing key de la plantilla.',
+  },
+  {
+    id: 'gen-ver-emisor',
+    title: 'Mira cómo viaja cada mensaje',
+    link: area('Flujo', 'flow'),
+    actions: [
+      'Vuelve a «Flujo».',
+      'Mira el diagrama y el registro de eventos. Pulsa «Ver» en una fila para abrir el mensaje.',
+    ],
+    shouldSee: [
+      `En el diagrama, tres elementos unidos: [[${N.temperatureEmitter}]] (publicador) → [[${N.sensors}]] (exchange) → [[${N.readings}]] (cola). Un punto recorre el camino de cada mensaje.`,
+      `En el registro, filas de tipo «Publicación» con el recorrido «${N.sensors} → ${N.readings}» y la routing key ${N.sensorKey}.`,
+      `La cola [[${N.readings}]] muestra cada vez más «listos»: nadie los consume todavía. La gráfica «Mensajes listos» sube.`,
+    ],
+    whatHappened:
+      'Estás viendo datos reales: RabbitMQ copia cada publicación y cada entrega a su «trazado», y esta pantalla lo dibuja. Un mensaje por segundo es lo bastante lento para seguirlo con los ojos.',
+  },
+  {
+    id: 'gen-consumidor',
+    title: 'Crea un consumidor simulado',
+    link: area('Generador', 'generator'),
+    actions: [
+      `En el panel «Consumidores simulados», en «Nombre» escribe [[${N.reader}]].`,
+      `En «Cola» elige [[${N.readings}]].`,
+      'En «Tiempo de proceso por mensaje», deja «Fijo» y escribe [[200]] en «Tarda (ms)».',
+      'Deja «Porcentaje de fallos» en [[0]].',
+      'Pulsa «Crear consumidor» y, en su tarjeta, «Iniciar».',
+    ],
+    shouldSee: [
+      `Un aviso: «Consumidor «${N.reader}» creado. Está parado…»`,
+      'Tras «Iniciar», su tarjeta dice [[En marcha]] y sus «Procesados» empiezan a subir.',
+    ],
+    whatHappened:
+      'Un consumidor simulado lee de la cola solo, tardando lo que le has dicho en procesar cada mensaje. Como tarda 200 ms, puede con unos 5 mensajes por segundo; el emisor solo envía 1.',
+  },
+  {
+    id: 'gen-ver-consumidor',
+    title: 'Mira cómo se vacía la cola',
+    link: area('Flujo', 'flow'),
+    actions: ['Vuelve a «Flujo» y mira el diagrama, el registro y las gráficas durante unos segundos.'],
+    shouldSee: [
+      `Aparece un cuarto elemento, [[${N.reader}]] (consumidor), unido a la cola [[${N.readings}]].`,
+      'En el registro salen filas de tipo «Entrega» junto a las de «Publicación».',
+      `En la cola, los «listos» bajan hasta 0 y se quedan ahí; en la gráfica «Mensajes listos» la línea cae.`,
+    ],
+    whatHappened:
+      'Entran 1 mensaje por segundo y el consumidor retira hasta 5, así que la cola se vacía. Cuando un consumidor es más rápido que quien publica, la cola no se acumula.',
+  },
+  {
+    id: 'gen-emisor-cola',
+    title: 'Crea un emisor que publica directamente en la cola',
+    link: area('Generador', 'generator'),
+    actions: [
+      `En «Nuevo emisor», elige en «Plantilla del catálogo» [[${N.robotEmitter}]] y pulsa «Usar plantilla».`,
+      `En «Destino», marca [[Directamente a una cola]] y elige [[${N.readings}]] en «Cola».`,
+      'Pulsa «Crear emisor» y, en su tarjeta, «Iniciar».',
+    ],
+    shouldSee: [
+      `Un aviso: «Emisor «${N.robotEmitter}» creado…» y su tarjeta, con el destino «Cola «${N.readings}»», cada 100 ms.`,
+      'Tras «Iniciar», sus «Publicados» suben unos 10 por segundo.',
+    ],
+    whatHappened:
+      'Este emisor no usa tu exchange: publica «directamente en la cola». En realidad RabbitMQ lo hace pasar por un exchange sin nombre, el exchange por defecto.',
+  },
+  {
+    id: 'gen-ver-cola',
+    title: 'Mira qué pasa cuando se publica más rápido de lo que se consume',
+    link: area('Flujo', 'flow'),
+    actions: ['Vuelve a «Flujo» y observa unos 20 segundos.'],
+    shouldSee: [
+      `Aparecen [[${N.robotEmitter}]] y un exchange llamado [[(exchange por defecto)]], los dos unidos a [[${N.readings}]].`,
+      'En el registro, las publicaciones del brazo tienen el recorrido «(exchange por defecto) → lecturas» y la routing key lecturas.',
+      `Ahora entran unos 11 mensajes por segundo y el consumidor solo retira 5: los «listos» de [[${N.readings}]] suben sin parar, y la gráfica «Mensajes listos» sube.`,
+    ],
+    whatHappened:
+      'Cuando el exchange por defecto recibe un mensaje, lo entrega a la cola cuyo nombre coincide con la routing key. Y ves el problema típico de la mensajería: si se publica más rápido de lo que se consume, la cola crece.',
+  },
+  {
+    id: 'gen-controles',
+    title: 'Sigue un mensaje con calma',
+    link: area('Flujo', 'flow'),
+    actions: [
+      'En «Filtrar por nombre o routing key», escribe [[planta1.#]].',
+      'En «Velocidad de la animación», elige [[Cámara lenta (÷10)]].',
+      'Pulsa «Pausar animación» y luego «Reanudar animación».',
+      'Borra el filtro.',
+    ],
+    shouldSee: [
+      'Con el filtro, el registro y los puntos solo enseñan los mensajes del sensor de temperatura (los del brazo tienen la routing key «lecturas» y quedan fuera).',
+      'En cámara lenta, cada punto tarda unos 7 segundos en recorrer un tramo.',
+      'En pausa, los puntos se quedan quietos mientras el registro sigue contando.',
+    ],
+    whatHappened:
+      'El filtro admite los mismos comodines que un exchange topic: «*» sustituye una palabra y «#» varias. Sirve para centrarte en un solo emisor cuando hay mucho tráfico.',
+  },
+  {
+    id: 'gen-parar',
+    title: 'Para todo',
+    link: area('Generador', 'generator'),
+    actions: ['Pulsa «Parar todo», arriba del todo.', 'Vuelve a «Flujo» y espera unos 10 segundos.'],
+    shouldSee: [
+      'Un aviso: «Se ha parado todo lo que estaba en marcha.» y todas las tarjetas en [[Parado]].',
+      'En «Flujo», los elementos van desapareciendo del diagrama hasta que sale otra vez «No hay flujo activo ahora mismo».',
+    ],
+    whatHappened:
+      'Los emisores y consumidores simulados no se detienen solos: corren en el servidor hasta que los paras. «Parar todo» es el botón de seguridad. Y el diagrama solo dibuja lo que tiene mensajes pasando por él.',
+  },
+];
+
+/** Último paso opcional del ejemplo 3: dejar el laboratorio limpio. */
+export const GENERATOR_CLEANUP_STEPS: readonly ExampleStep[] = [
+  {
+    id: 'gen-limpiar-generador',
+    title: 'Elimina los emisores y el consumidor',
+    link: area('Generador', 'generator'),
+    actions: [`Pulsa «Eliminar» en [[${N.temperatureEmitter}]], en [[${N.robotEmitter}]] y en [[${N.reader}]], y confirma cada vez.`],
+    shouldSee: ['Un diálogo de confirmación por cada uno y un aviso de que se ha eliminado.'],
+    whatHappened: 'Los mensajes que ya publicaron se quedan en su cola; lo que desaparece es el emisor o el consumidor.',
+  },
+  {
+    id: 'gen-limpiar-colas',
+    title: 'Elimina la cola y el exchange',
+    link: area('Colas', 'queues'),
+    actions: [
+      `En «Colas», elimina [[${N.readings}]].`,
+      `En «Exchanges», elimina [[${N.sensors}]].`,
+    ],
+    shouldSee: ['Los diálogos avisan de que se perderán los mensajes y los bindings.', 'Las listas vuelven a estar como al principio.'],
+    whatHappened: 'El laboratorio queda limpio. Si tenías muchos mensajes acumulados, borrar la cola es la forma más rápida de deshacerte de ellos.',
+  },
+];
+
 /** Todos los pasos, en el orden en que se leen. */
-export const ALL_STEPS: readonly ExampleStep[] = [...MAIN_STEPS, ...FANOUT_STEPS, ...CLEANUP_STEPS];
+export const ALL_STEPS: readonly ExampleStep[] = [
+  ...MAIN_STEPS,
+  ...FANOUT_STEPS,
+  ...CLEANUP_STEPS,
+  ...GENERATOR_STEPS,
+  ...GENERATOR_CLEANUP_STEPS,
+];
 
 export interface TextPart {
   text: string;

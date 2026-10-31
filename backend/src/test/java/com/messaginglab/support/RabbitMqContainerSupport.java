@@ -54,6 +54,17 @@ public final class RabbitMqContainerSupport {
 		return new RabbitMqProperties(host(), amqpPort(), managementPort(), username(), password(), "/");
 	}
 
+	/** Ejecuta un comando de {@code rabbitmqctl} dentro del contenedor, por ejemplo {@code trace_on}. */
+	public static void rabbitmqctl(String... arguments) throws IOException, InterruptedException {
+		String[] command = new String[arguments.length + 1];
+		command[0] = "rabbitmqctl";
+		System.arraycopy(arguments, 0, command, 1, arguments.length);
+		var result = CONTAINER.execInContainer(command);
+		if (result.getExitCode() != 0) {
+			throw new IOException("rabbitmqctl " + String.join(" ", arguments) + " ha fallado: " + result.getStderr());
+		}
+	}
+
 	/** Petición POST con cuerpo JSON a la API de gestión, por ejemplo para publicar un mensaje de prueba. */
 	public static HttpResponse<String> managementPost(String path, String json)
 			throws IOException, InterruptedException {

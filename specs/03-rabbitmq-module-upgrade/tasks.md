@@ -21,6 +21,11 @@ Una tarea solo se marca cuando su comprobación «Hecho cuando» se ha ejecutado
   *RF:* RF-4
   *Hecho cuando:* las pruebas verifican que cada paso tiene sus tres partes, que los enlaces apuntan a rutas existentes, que los nombres del ejemplo son los mismos en todos los pasos, y que el ejemplo cubre todo lo de CA-4.3. Además, el asistente sigue el ejemplo contra el laboratorio real (por HTTP) y comprueba que cada «Deberías ver» es cierto.
 
+- [x] **T05 — La guía en partes y el ejemplo del generador** *(añadida a petición del usuario)*
+  Crear el submenú de CA-6.1, separar los ejemplos 1 y 2, escribir el ejemplo 3 con el generador y el flujo, y recordar la parte elegida al cambiar de pestaña.
+  *RF:* RF-6
+  *Hecho cuando:* las pruebas verifican las cuatro partes del submenú y que solo se muestra una, que se recuerda al volver, que cada ejemplo numera desde 1, que el ejemplo 3 cubre emisor por exchange, consumidor simulado, emisor directo a cola, exchange por defecto, controles de «Flujo» y «Parar todo», que sus nombres no se mezclan con los de los otros ejemplos y que los enlaces apuntan a pantallas que existen. `npm test -- --watch=false` y `npx ng build` pasan. *Pendiente:* comprobar por HTTP, contra el laboratorio real, que cada «Deberías ver» del ejemplo 3 es cierto (como se hizo con el ejemplo 1).
+
 - [ ] **T04 — README y verificación**
   Mencionar la guía en el README y comprobar el conjunto.
   *RF:* todos

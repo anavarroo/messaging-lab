@@ -1,7 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Subject } from 'rxjs';
+import { NEVER, Subject } from 'rxjs';
 import { BackendStatus } from '../../../core/status/backend-status';
 import { StatusApiService, StatusError } from '../../../core/status/status-api.service';
+import { AssistantChat } from '../../assistant/assistant-chat';
+import { RabbitMqHealthApi } from '../rabbitmq-status/rabbitmq-health-api';
 import { StatusPage } from './status-page';
 
 describe('StatusPage', () => {
@@ -26,7 +28,12 @@ describe('StatusPage', () => {
     });
     await TestBed.configureTestingModule({
       imports: [StatusPage],
-      providers: [{ provide: StatusApiService, useValue: { getStatus } }],
+      providers: [
+        { provide: StatusApiService, useValue: { getStatus } },
+        // el estado de RabbitMQ se prueba aparte
+        { provide: RabbitMqHealthApi, useValue: { version: () => NEVER, tracing: () => NEVER } },
+        { provide: AssistantChat, useValue: { status: () => null, refreshStatus: () => undefined } },
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(StatusPage);
@@ -59,7 +66,7 @@ describe('StatusPage', () => {
 
   it('shows a loading indicator while the query is in progress', () => {
     expect(page.textContent).toContain('Consultando el estado del backend');
-    expect(page.querySelector('.details')).toBeNull();
+    expect(page.querySelector('section.status .details')).toBeNull();
     expect(alert()).toBeNull();
     expect(retryButton()).toBeUndefined();
   });

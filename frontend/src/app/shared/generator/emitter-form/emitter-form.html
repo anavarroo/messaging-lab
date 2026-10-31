@@ -21,14 +21,14 @@
     }
   }
 
+  <div class="columns">
+    <div class="column">
   <div class="field">
     <label for="emitter-name">Nombre</label>
     <input id="emitter-name" type="text" formControlName="name" autocomplete="off"
       aria-describedby="emitter-name-error" [attr.aria-invalid]="attempted() && errors().name ? 'true' : null" />
     <p id="emitter-name-error" class="field-error" role="alert">@if (attempted()) { {{ errors().name }} }</p>
   </div>
-
-  <ng-content select="[destination]" />
 
   <fieldset class="frequency">
     <legend>Frecuencia</legend>
@@ -61,6 +61,11 @@
     }
     <p id="emitter-interval-error" class="field-error" role="alert">@if (attempted()) { {{ errors().interval }} }</p>
   </fieldset>
+    </div>
+    <div class="column">
+      <ng-content select="[destination]" />
+    </div>
+  </div>
 
   <div class="field wide">
     <label for="emitter-template">Plantilla del mensaje</label>

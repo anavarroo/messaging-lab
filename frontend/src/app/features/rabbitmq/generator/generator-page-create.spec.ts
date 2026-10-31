@@ -119,6 +119,21 @@ describe('GeneratorPage: new emitters, simulated consumers and full queues', () 
   const emitterForm = () => page.querySelector('app-emitter-form form') as HTMLFormElement;
   const text = (selector: string) => page.querySelector(selector)?.textContent?.trim();
 
+  describe('layout', () => {
+    it('separates the emitters from the consumers in two panels of their own', () => {
+      const emitters = page.querySelector('.emitters-panel')!;
+      const consumers = page.querySelector('.consumers-panel')!;
+
+      expect(emitters.querySelector('h4')?.textContent).toBe('Emisores');
+      expect(emitters.querySelector('app-emitter-form')).not.toBeNull();
+      expect(emitters.querySelector('app-emitter-list, .empty')).not.toBeNull();
+      expect(emitters.querySelector('app-simulated-consumers')).toBeNull();
+      expect(consumers.querySelector('app-simulated-consumers')).not.toBeNull();
+      expect(consumers.querySelector('app-emitter-form')).toBeNull();
+      expect(consumers.textContent).toContain('Consumen');
+    });
+  });
+
   describe('new emitter', () => {
     it('is filled by a template of the catalog, including the suggested routing key', () => {
       set('#emitter-preset', 'temperatura');

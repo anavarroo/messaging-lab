@@ -50,6 +50,14 @@ class RabbitMqMessagePublisherTest {
 	}
 
 	@Test
+	void publishesOnBehalfOfAnEmitterSoThePublisherCanBeRecognised() {
+		publisher.publish(RabbitMqDestination.toExchange("pizzeria", "pedido.pizza"), "x", "Brazo robótico");
+
+		assertThat(broker.published())
+			.containsExactly(new PublishRequest("pizzeria", "pedido.pizza", "x", "Brazo robótico"));
+	}
+
+	@Test
 	void publishesToAQueueThroughTheDefaultExchangeUsingItsNameAsRoutingKey() {
 		publisher.publish(RabbitMqDestination.toQueue("cocina"), "x");
 

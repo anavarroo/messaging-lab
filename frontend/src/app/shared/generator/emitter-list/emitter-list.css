@@ -9,13 +9,13 @@
 
 .emitter {
   padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-left-width: 5px;
   border-radius: 6px;
 }
 
 .emitter.status-running {
-  border-left-color: #1b7a3a;
+  border-left-color: var(--success);
 }
 
 .emitter.status-paused {
@@ -23,7 +23,7 @@
 }
 
 .emitter.status-failed {
-  border-left-color: #b3261e;
+  border-left-color: var(--danger);
 }
 
 .emitter.status-stopped,
@@ -45,7 +45,7 @@ h5 {
 
 .where {
   margin: 0.125rem 0 0;
-  color: #555;
+  color: var(--text-muted);
   font-size: 0.9rem;
   overflow-wrap: anywhere;
 }
@@ -54,14 +54,14 @@ h5 {
   flex: none;
   padding: 0.1rem 0.6rem;
   border-radius: 999px;
-  background: #eee;
+  background: var(--border);
   color: #333;
   font-size: 0.85rem;
   font-weight: 600;
 }
 
 .badge.status-running {
-  background: #eaf6ee;
+  background: var(--success-soft);
   color: #11602b;
 }
 
@@ -71,8 +71,8 @@ h5 {
 }
 
 .badge.status-failed {
-  background: #fdecea;
-  color: #7a1712;
+  background: var(--danger-soft);
+  color: var(--danger-ink);
 }
 
 .counters {
@@ -89,7 +89,7 @@ h5 {
 }
 
 .counters dt {
-  color: #555;
+  color: var(--text-muted);
 }
 
 .counters dt::after {
@@ -103,7 +103,7 @@ h5 {
 .stop-message {
   margin: 0 0 0.5rem;
   padding: 0.4rem 0.6rem;
-  border-left: 4px solid #f2a900;
+  border-left: 4px solid var(--focus);
   background: #fff8e1;
   color: #5c4300;
 }
@@ -116,9 +116,9 @@ h5 {
 
 button {
   padding: 0.4rem 0.9rem;
-  border: 1px solid #1f4fd8;
+  border: 1px solid var(--primary);
   border-radius: 4px;
-  background: #1f4fd8;
+  background: var(--primary);
   color: #fff;
   font: inherit;
   cursor: pointer;
@@ -126,23 +126,23 @@ button {
 
 button.secondary {
   background: #fff;
-  color: #1f4fd8;
+  color: var(--primary);
 }
 
 button.danger {
-  border-color: #b3261e;
+  border-color: var(--danger);
   background: #fff;
-  color: #b3261e;
+  color: var(--danger);
 }
 
 button:disabled {
   border-color: #aaa;
-  background: #eee;
+  background: var(--border);
   color: #777;
   cursor: not-allowed;
 }
 
 button:focus-visible {
-  outline: 3px solid #f2a900;
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }

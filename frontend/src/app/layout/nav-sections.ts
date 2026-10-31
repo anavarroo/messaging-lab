@@ -14,10 +14,4 @@ export const NAV_SECTIONS: readonly NavSection[] = [
     enabled: false,
     description: 'Topics, particiones, offsets, productores, consumer groups y lag.',
   },
-  {
-    label: 'Visualizador de flujo',
-    enabled: false,
-    description:
-      'Publicar un mensaje y seguir visualmente su recorrido, las entregas y los errores.',
-  },
 ];

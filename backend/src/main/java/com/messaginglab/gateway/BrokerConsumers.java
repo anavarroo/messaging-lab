@@ -15,6 +15,14 @@ public interface BrokerConsumers {
 	 */
 	ConsumerHandle start(String queue, AckMode ackMode, ConsumerListener listener);
 
+	/**
+	 * Igual que {@link #start(String, AckMode, ConsumerListener)}, dando un nombre al consumidor (en RabbitMQ, su
+	 * etiqueta) para reconocerlo en el visualizador de flujo.
+	 */
+	default ConsumerHandle start(String queue, AckMode ackMode, ConsumerListener listener, String name) {
+		return start(queue, ackMode, listener);
+	}
+
 	/** Consumidor en marcha. */
 	interface ConsumerHandle {
 

@@ -32,7 +32,7 @@ p {
 
 button {
   padding: 0.5rem 1rem;
-  border: 1px solid #1f4fd8;
+  border: 1px solid var(--primary);
   border-radius: 4px;
   font: inherit;
   cursor: pointer;
@@ -40,16 +40,16 @@ button {
 
 .secondary {
   background: #fff;
-  color: #1f4fd8;
+  color: var(--primary);
 }
 
 .danger {
-  border-color: #b3261e;
-  background: #b3261e;
+  border-color: var(--danger);
+  background: var(--danger);
   color: #fff;
 }
 
 button:focus-visible {
-  outline: 3px solid #f2a900;
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }

@@ -1,0 +1,20 @@
+.flow {
+  display: grid;
+  gap: 1rem;
+}
+
+.controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+  margin: 0;
+}
+
+.controls .field {
+  margin-bottom: 0;
+}
+
+.controls button {
+  margin-bottom: 0.25rem;
+}

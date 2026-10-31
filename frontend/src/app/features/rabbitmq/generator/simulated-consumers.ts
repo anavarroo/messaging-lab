@@ -17,7 +17,7 @@ const STATUS_LABELS = { STOPPED: 'Parado', RUNNING: 'En marcha', FAILED: 'Fallad
   selector: 'app-simulated-consumers',
   imports: [ReactiveFormsModule],
   templateUrl: './simulated-consumers.html',
-  styleUrls: ['../shared/lab-area.css', './simulated-consumers.css'],
+  styleUrls: ['../../../shared/lab-area.css', './simulated-consumers.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SimulatedConsumers {

@@ -12,7 +12,7 @@ import { EmitterDestination } from './generator-api';
   selector: 'app-rabbitmq-destination-form',
   imports: [ReactiveFormsModule],
   templateUrl: './rabbitmq-destination-form.html',
-  styleUrls: ['../shared/lab-area.css'],
+  styleUrls: ['../../../shared/lab-area.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class RabbitMqDestinationForm {

@@ -50,6 +50,14 @@ Para cada elemento de la lista, la guía deberá incluir, siempre en este orden 
 ### RF-5 — Si algo no sale como esperas
 - **CA-5.1:** La guía incluirá una sección con los despistes más habituales de quien empieza y su solución, entre ellos: «mi mensaje no llega a la cola», «el patrón del topic no coincide», «el consumidor no recibe nada», «el mensaje sigue ahí tras consumirlo» y «un mensaje aparece reentregado sin que lo haya rechazado».
 
+### RF-6 — La guía en partes, con un ejemplo del generador
+*(Añadido tras la especificación 04 y la 05, a petición del usuario.)*
+
+- **CA-6.1:** La guía tendrá un submenú con cuatro partes: **«Cómo funciona»** (los elementos, los tipos de exchange, las ideas que confunden, «Si algo no sale como esperas» y el glosario), **«Ejemplo 1: la pizzería»**, **«Ejemplo 2: la variante»** (con un exchange fanout) y **«Ejemplo 3: con el generador»**. Solo se muestra una parte a la vez.
+- **CA-6.2:** Al cambiar de parte se lleva la lectura al principio de la nueva, y al ir a otra pestaña del laboratorio y volver se muestra la misma parte.
+- **CA-6.3:** El ejemplo 3 es independiente de los otros dos y usa el generador (especificación 04) y la pestaña «Flujo» (especificación 05): crea un exchange, una cola y un binding; un emisor que publica **en el exchange**; un consumidor simulado que vacía la cola; y un emisor que publica **directamente en la cola** más rápido de lo que se consume, con lo que la cola crece. En cada paso se ve el resultado en «Flujo». Incluye el exchange por defecto, los controles de «Flujo» (filtro, pausa, cámara lenta) y «Parar todo».
+- **CA-6.4:** Cada ejemplo numera sus pasos desde 1. La limpieza opcional (CA-4.6) pasa a ser el final del ejemplo 2 (para los ejemplos 1 y 2) y del ejemplo 3 (para el suyo).
+
 ## 4. Requisitos no funcionales
 
 - **RNF-1 (Claridad):** frases cortas, voz activa y sin jerga sin explicar. Cada concepto tendrá un ejemplo.

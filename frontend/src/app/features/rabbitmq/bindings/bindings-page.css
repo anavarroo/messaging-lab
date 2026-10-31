@@ -1,5 +1,5 @@
 .bindings {
-  max-width: 62rem;
+  max-width: 66rem;
 }
 
 .filters {
@@ -12,9 +12,9 @@
 .fanout {
   margin: 0 0 0.75rem;
   padding: 0.5rem 0.75rem;
-  border-left: 4px solid #1f4fd8;
-  background: #e8eefc;
-  color: #1f3a8a;
+  border-left: 4px solid var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-hover);
 }
 
 .key {

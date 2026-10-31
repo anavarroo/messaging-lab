@@ -16,6 +16,10 @@ tags:
     description: Colas de RabbitMQ.
   - name: RabbitMqBindings
     description: Bindings entre exchanges y colas de RabbitMQ.
+  - name: RabbitMqFlow
+    description: Visualizador de flujo de mensajes de RabbitMQ.
+  - name: Assistant
+    description: Asistente de IA local del laboratorio.
   - name: RabbitMqQueueMessages
     description: Inspección y vaciado de los mensajes de una cola.
   - name: RabbitMqSessionEvents
@@ -924,6 +928,135 @@ paths:
       responses:
         '200':
           description: Todo detenido.
+  /api/rabbitmq/flow/status:
+    get:
+      tags:
+        - RabbitMqFlow
+      operationId: getFlowStatus
+      summary: Estado de la fuente de datos del visualizador de flujo
+      description: >-
+        Indica si el trazado de RabbitMQ (firehose) está activo. Si no lo está, el campo hint explica cómo
+        activarlo.
+      responses:
+        '200':
+          description: Estado de la fuente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowSourceStatus'
+  /api/rabbitmq/flow/topology:
+    get:
+      tags:
+        - RabbitMqFlow
+      operationId: getFlowTopology
+      summary: Topología que dibuja el visualizador
+      description: >-
+        Nodos (publicadores, exchanges, colas y consumidores) y las conexiones entre ellos. Los
+        publicadores y consumidores son los observados en el trazado.
+      responses:
+        '200':
+          description: Topología actual.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FlowTopology'
+  /api/rabbitmq/flow/events:
+    get:
+      tags:
+        - RabbitMqFlow
+      operationId: listFlowEvents
+      summary: Últimos eventos de flujo
+      description: Los últimos eventos conservados en memoria (hasta 1000), el más reciente primero.
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 1000
+            default: 200
+      responses:
+        '200':
+          description: Eventos recientes.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FlowEvent'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+  /api/rabbitmq/flow/stream:
+    get:
+      tags:
+        - RabbitMqFlow
+      operationId: openFlowStream
+      summary: Flujo de eventos en tiempo real
+      description: >-
+        Abre un flujo text/event-stream mientras la pantalla del visualizador está abierta. Eventos:
+        status (FlowSourceStatus, al conectar y cuando cambia), topology (FlowTopology, al conectar y cuando
+        cambia), tick (FlowTick; al conectar se reenvían los de los últimos 2 minutos y después uno por
+        segundo) y flow-event (FlowEvent, como máximo 50 por segundo; los omitidos se cuentan en el tick).
+        Cada 15 segundos se envía un comentario de latido.
+      responses:
+        '200':
+          description: Flujo abierto.
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/FlowEventStream'
+  /api/assistant/status:
+    get:
+      tags:
+        - Assistant
+      operationId: getAssistantStatus
+      summary: Estado del modelo del asistente
+      description: >-
+        Indica si el modelo de IA local está listo para responder, si se está preparando (la primera vez se descarga)
+        o si no está disponible, con el motivo en español. Que el asistente no esté disponible no afecta al resto de
+        la aplicación.
+      responses:
+        '200':
+          description: Estado del asistente.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssistantStatus'
+  /api/assistant/chat:
+    post:
+      tags:
+        - Assistant
+      operationId: chatWithAssistant
+      summary: Pregunta al asistente
+      description: >-
+        Responde a una pregunta sobre el laboratorio usando el estado actual de la aplicación. La respuesta llega por
+        un flujo text/event-stream con los eventos token (AssistantToken, un trozo de la respuesta), done (fin) y
+        error (AssistantError, si el modelo falla a mitad de la respuesta). El asistente es de solo lectura. Si el
+        cliente cierra la conexión, la generación se cancela. Solo atiende una pregunta a la vez.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssistantChatRequest'
+      responses:
+        '200':
+          description: Respuesta en curso.
+          content:
+            text/event-stream:
+              schema:
+                $ref: '#/components/schemas/AssistantEventStream'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '503':
+          description: El asistente no está disponible o se está preparando.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiError'
 components:
   responses:
     ValidationError:
@@ -980,6 +1113,7 @@ components:
             - BROKER_UNAVAILABLE
             - TIMEOUT
             - BROKER_REJECTED
+            - ASSISTANT_UNAVAILABLE
           example: BROKER_UNAVAILABLE
         message:
           type: string
@@ -1742,3 +1876,241 @@ components:
         stopMessage:
           type: string
           nullable: true
+    FlowSourceStatus:
+      type: object
+      description: Estado de la fuente de datos del visualizador.
+      required:
+        - state
+      properties:
+        state:
+          type: string
+          description: UNAVAILABLE (el sistema no responde), DISABLED (el trazado está desactivado) o ACTIVE.
+          enum:
+            - UNAVAILABLE
+            - DISABLED
+            - ACTIVE
+        hint:
+          type: string
+          nullable: true
+          description: Qué hacer para activar la fuente, en español.
+    FlowNode:
+      type: object
+      description: >-
+        Elemento del diagrama. Es genérico; en RabbitMQ el enrutador es un exchange y el destino una cola.
+      required:
+        - id
+        - kind
+        - label
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum:
+            - PRODUCER
+            - ROUTER
+            - DESTINATION
+            - CONSUMER
+        label:
+          type: string
+        detail:
+          type: string
+          nullable: true
+          description: Dato adicional del nodo, por ejemplo el tipo de exchange.
+    FlowEdge:
+      type: object
+      required:
+        - from
+        - to
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        label:
+          type: string
+          nullable: true
+          description: Por ejemplo, el patrón de un binding.
+    FlowTopology:
+      type: object
+      required:
+        - nodes
+        - edges
+      properties:
+        nodes:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowNode'
+        edges:
+          type: array
+          items:
+            $ref: '#/components/schemas/FlowEdge'
+    FlowEvent:
+      type: object
+      description: Un mensaje publicado o entregado, tal como lo ve el trazado.
+      required:
+        - id
+        - time
+        - type
+        - destinations
+        - sizeBytes
+        - redelivered
+        - unrouted
+      properties:
+        id:
+          type: integer
+          format: int64
+        time:
+          type: string
+          format: date-time
+        type:
+          type: string
+          enum:
+            - PUBLISH
+            - DELIVER
+        producer:
+          type: string
+          nullable: true
+          description: Id del nodo publicador, si se conoce.
+        router:
+          type: string
+          nullable: true
+          description: Id del nodo enrutador (exchange) por el que pasó.
+        destinations:
+          type: array
+          description: Ids de los destinos (colas) a los que RabbitMQ enrutó la publicación, o de la cola de la que sale la entrega.
+          items:
+            type: string
+        consumer:
+          type: string
+          nullable: true
+          description: Id del nodo consumidor, en las entregas.
+        key:
+          type: string
+          description: Routing key.
+        sizeBytes:
+          type: integer
+          format: int64
+        redelivered:
+          type: boolean
+        unrouted:
+          type: boolean
+          description: Publicación que no llegó a ninguna cola.
+        body:
+          type: string
+          description: Cuerpo, truncado a 4 KB. Es texto no fiable.
+        bodyTruncated:
+          type: boolean
+        properties:
+          type: object
+          additionalProperties: true
+          description: Propiedades y cabeceras del mensaje.
+    FlowTick:
+      type: object
+      description: Resumen de un segundo.
+      required:
+        - time
+        - published
+        - delivered
+        - ready
+        - omitted
+      properties:
+        time:
+          type: string
+          format: date-time
+        published:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          description: Mensajes por segundo publicados, por id de nodo.
+        delivered:
+          type: object
+          additionalProperties:
+            type: number
+            format: double
+          description: Mensajes por segundo entregados, por id de nodo.
+        ready:
+          type: object
+          additionalProperties:
+            type: integer
+            format: int64
+          description: Mensajes listos, por id de destino.
+        omitted:
+          type: integer
+          format: int64
+          description: Eventos que no se enviaron en este segundo por superar el máximo de 50.
+    FlowEventStream:
+      type: string
+      description: >-
+        Flujo de eventos text/event-stream. El generador lo sustituye por SseEmitter (schemaMappings); los
+        eventos concretos son status, topology, tick y flow-event.
+    AssistantStatus:
+      type: object
+      description: Estado del modelo del asistente.
+      required:
+        - state
+      properties:
+        state:
+          type: string
+          description: READY (puede responder), PREPARING (se está descargando o cargando el modelo) o UNAVAILABLE.
+          enum:
+            - READY
+            - PREPARING
+            - UNAVAILABLE
+        message:
+          type: string
+          nullable: true
+          description: Explicación en español cuando no está listo.
+    AssistantTurn:
+      type: object
+      description: Una intervención anterior de la conversación.
+      required:
+        - role
+        - text
+      properties:
+        role:
+          type: string
+          enum:
+            - USER
+            - ASSISTANT
+        text:
+          type: string
+          maxLength: 2000
+    AssistantChatRequest:
+      type: object
+      required:
+        - question
+      properties:
+        question:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: La pregunta, de hasta 500 caracteres.
+        history:
+          type: array
+          maxItems: 8
+          description: Las últimas intervenciones de la conversación; el servidor se queda con las que caben en el contexto.
+          items:
+            $ref: '#/components/schemas/AssistantTurn'
+    AssistantToken:
+      type: object
+      description: Un trozo de la respuesta (nombre de evento token).
+      required:
+        - text
+      properties:
+        text:
+          type: string
+    AssistantError:
+      type: object
+      description: El modelo falló a mitad de la respuesta (nombre de evento error).
+      required:
+        - message
+      properties:
+        message:
+          type: string
+    AssistantEventStream:
+      type: string
+      description: >-
+        Flujo de eventos text/event-stream. El generador lo sustituye por SseEmitter (schemaMappings); los eventos
+        concretos son token, done y error.

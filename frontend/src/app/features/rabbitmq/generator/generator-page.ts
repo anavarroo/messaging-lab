@@ -50,7 +50,7 @@ export const QUEUE_WARNING_THRESHOLD = 10_000;
     ConfirmDialog,
   ],
   templateUrl: './generator-page.html',
-  styleUrls: ['../shared/lab-area.css', './generator-page.css'],
+  styleUrls: ['../../../shared/lab-area.css', './generator-page.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class GeneratorPage implements OnInit {

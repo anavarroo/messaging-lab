@@ -10,7 +10,7 @@ h5 {
 .group {
   margin: 2rem 0 0.75rem;
   padding-bottom: 0.25rem;
-  border-bottom: 2px solid #1f4fd8;
+  border-bottom: 2px solid var(--primary);
   font-size: 1.1rem;
 }
 
@@ -40,14 +40,14 @@ h5 {
 .step {
   margin: 0 0 1.25rem;
   padding: 1rem;
-  border: 1px solid #ddd;
-  border-left: 5px solid #1f4fd8;
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--primary);
   border-radius: 6px;
 }
 
 .part {
   margin: 0.75rem 0 0.25rem;
-  color: #1f3a8a;
+  color: var(--primary-hover);
   font-size: 0.85rem;
   letter-spacing: 0.03em;
   text-transform: uppercase;
@@ -71,8 +71,8 @@ h5 {
 .happened {
   margin: 0;
   padding: 0.5rem 0.75rem;
-  border-left: 4px solid #1b7a3a;
-  background: #eaf6ee;
+  border-left: 4px solid var(--success);
+  background: var(--success-soft);
 }
 
 .lab-link {
@@ -90,12 +90,36 @@ code {
 .done {
   margin-top: 2rem;
   padding: 0.75rem 1rem;
-  border: 2px solid #1b7a3a;
+  border: 2px solid var(--success);
   border-radius: 6px;
-  background: #eaf6ee;
+  background: var(--success-soft);
 }
 
 a:focus-visible {
-  outline: 3px solid #f2a900;
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
+}
+
+/* ---- pulido visual ---- */
+.example {
+  line-height: 1.65;
+}
+
+.step {
+  margin: var(--space-5) 0;
+  padding: 1.5rem 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.plan,
+.tips {
+  padding: 1.1rem 1.4rem;
+  border-radius: var(--radius);
+}
+
+.group {
+  margin: var(--space-6) 0 var(--space-3);
 }

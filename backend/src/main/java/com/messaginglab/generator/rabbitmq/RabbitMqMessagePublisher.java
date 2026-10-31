@@ -39,8 +39,14 @@ public final class RabbitMqMessagePublisher implements MessagePublisher {
 
 	@Override
 	public boolean publish(Destination destination, String body) {
+		return publish(destination, body, null);
+	}
+
+	@Override
+	public boolean publish(Destination destination, String body, String source) {
 		RabbitMqDestination target = cast(destination);
-		boolean routed = publisher.publish(new PublishRequest(target.publishExchange(), target.publishRoutingKey(), body))
+		boolean routed = publisher
+			.publish(new PublishRequest(target.publishExchange(), target.publishRoutingKey(), body, source))
 			.routed();
 		if (!routed && target.type() == RabbitMqDestination.Type.QUEUE) {
 			// por el exchange por defecto un mensaje solo deja de enrutarse si la cola ya no existe

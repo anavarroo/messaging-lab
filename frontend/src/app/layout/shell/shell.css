@@ -1,6 +1,6 @@
 :host {
   /* alto de la cabecera fija: las demás zonas fijas se colocan justo debajo */
-  --header-height: 3.5rem;
+  --header-height: 3.75rem;
   display: block;
   min-height: 100vh;
 }
@@ -12,16 +12,32 @@
   z-index: 30;
   display: flex;
   align-items: center;
-  box-sizing: border-box;
+  gap: var(--space-3);
   height: var(--header-height);
-  padding: 0 1.5rem;
-  background: #14213d;
+  padding: 0 var(--space-6);
+  background: linear-gradient(120deg, #14213d 0%, #1d3a8a 100%);
+  box-shadow: 0 2px 10px rgba(20, 33, 61, 0.25);
   color: #fff;
 }
 
 .header h1 {
   margin: 0;
-  font-size: 1.25rem;
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+/* una marca sencilla antes del nombre */
+.header h1::before {
+  content: '';
+  display: inline-block;
+  width: 0.85rem;
+  height: 0.85rem;
+  margin-right: 0.6rem;
+  border-radius: 4px;
+  background: linear-gradient(135deg, #7aa2ff, #c4d4ff);
+  vertical-align: -0.05rem;
 }
 
 .layout {
@@ -33,25 +49,25 @@
   position: sticky;
   top: var(--header-height);
   align-self: flex-start;
-  box-sizing: border-box;
-  flex: 0 0 18rem;
+  flex: 0 0 18.5rem;
   max-height: calc(100vh - var(--header-height));
-  padding: 1rem;
+  padding: var(--space-5) var(--space-4);
   overflow-y: auto;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  min-height: calc(100vh - var(--header-height));
 }
 
 .content {
   flex: 1 1 20rem;
   min-width: 0;
-  padding: 1.5rem;
-  /* el separador va aquí y no en el menú, para que llegue hasta abajo aunque el menú sea más corto */
-  border-left: 1px solid #ddd;
+  padding: var(--space-6) 2.5rem 3rem;
 }
 
 ul {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -60,29 +76,37 @@ ul {
 a,
 .disabled-section {
   display: block;
-  box-sizing: border-box;
   width: 100%;
-  padding: 0.6rem 0.75rem;
+  padding: 0.75rem 1rem;
   border: 1px solid transparent;
-  border-radius: 4px;
+  border-radius: var(--radius-sm);
   font: inherit;
   text-align: left;
   text-decoration: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 a {
-  color: #1f4fd8;
+  color: var(--text);
   font-weight: 600;
 }
 
+a:hover {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
 a.active {
-  background: #e8eefc;
-  border-color: #1f4fd8;
+  border-color: transparent;
+  background: var(--primary-soft);
+  box-shadow: inset 3px 0 0 var(--primary);
+  color: var(--primary);
 }
 
 .disabled-section {
-  background: #f3f3f3;
-  color: #6b6b6b;
+  border: 1px dashed var(--border-strong);
+  background: var(--surface-2);
+  color: var(--text-muted);
   cursor: not-allowed;
 }
 
@@ -93,34 +117,42 @@ a.active {
 
 .description {
   display: block;
-  margin-top: 0.25rem;
+  margin-top: var(--space-1);
   font-size: 0.85rem;
+  line-height: 1.45;
 }
 
 a:focus-visible,
 .disabled-section:focus-visible {
-  outline: 3px solid #f2a900;
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
 .notice {
   min-height: 1.5rem;
-  margin-top: 1rem;
-  color: #7a4b00;
+  margin-top: var(--space-4);
+  padding: 0 var(--space-1);
+  color: var(--warning);
   font-weight: 600;
 }
 
 /* En pantallas estrechas el menú ocuparía media pantalla: ahí no se queda fijo */
 @media (max-width: 40rem) {
+  .header {
+    padding: 0 var(--space-4);
+  }
+
   .sidebar {
     position: static;
     flex-basis: 100%;
     max-height: none;
+    min-height: 0;
     overflow-y: visible;
-    border-bottom: 1px solid #ddd;
+    border-right: 0;
+    border-bottom: 1px solid var(--border);
   }
 
   .content {
-    border-left: 0;
+    padding: var(--space-5) var(--space-4) var(--space-6);
   }
 }

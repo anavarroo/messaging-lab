@@ -42,7 +42,9 @@ class AmqpPublisher implements BrokerPublisher {
 			AtomicBoolean returned = new AtomicBoolean();
 			channel.addReturnListener(unroutable -> returned.set(true));
 			channel.confirmSelect();
-			channel.basicPublish(request.exchange(), request.routingKey(), true, PERSISTENT_TEXT,
+			AMQP.BasicProperties properties = request.source() == null ? PERSISTENT_TEXT
+					: PERSISTENT_TEXT.builder().appId(request.source()).build();
+			channel.basicPublish(request.exchange(), request.routingKey(), true, properties,
 					request.body().getBytes(StandardCharsets.UTF_8));
 			if (!channel.waitForConfirms(CONFIRMATION_TIMEOUT_MILLIS)) {
 				throw new BrokerRejectedException("RabbitMQ no ha aceptado el mensaje.");

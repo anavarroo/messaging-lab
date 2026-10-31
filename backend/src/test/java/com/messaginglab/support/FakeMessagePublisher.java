@@ -26,6 +26,8 @@ public class FakeMessagePublisher implements MessagePublisher {
 
 	private final List<Sent> sent = new ArrayList<>();
 
+	private final List<String> sources = new ArrayList<>();
+
 	private final Set<String> missing = new HashSet<>();
 
 	private boolean routed = true;
@@ -34,6 +36,11 @@ public class FakeMessagePublisher implements MessagePublisher {
 
 	public List<Sent> sent() {
 		return sent;
+	}
+
+	/** Quién publicó cada mensaje (el nombre del emisor), en el mismo orden que {@link #sent()}. */
+	public List<String> sources() {
+		return sources;
 	}
 
 	public List<String> bodies() {
@@ -58,6 +65,12 @@ public class FakeMessagePublisher implements MessagePublisher {
 		if (destination instanceof TestDestination test && missing.contains(test.name())) {
 			throw new NotFoundException("No existe " + test.describe() + ".");
 		}
+	}
+
+	@Override
+	public boolean publish(Destination destination, String body, String source) {
+		sources.add(source);
+		return publish(destination, body);
 	}
 
 	@Override

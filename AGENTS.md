@@ -4,9 +4,9 @@
 
 Laboratorio visual para aprender, experimentar y comparar sistemas de mensajería con RabbitMQ y Apache Kafka.
 
-El proyecto se desarrolla en un único repositorio Git (monorepo) que contiene el backend, el frontend, la infraestructura, las especificaciones, la documentación y las instrucciones para los agentes de IA.
+El proyecto se desarrolla en un único repositorio Git (monorepo) que contiene el backend, el frontend, el asistente de IA, la infraestructura, las especificaciones, la documentación y las instrucciones para los agentes de IA.
 
-El backend utiliza Java 21 y Spring Boot. El frontend utiliza Angular 21. La aplicación permite publicar y consumir mensajes, visualizar eventos y explorar conceptos como colas, tópicos, productores, consumidores y grupos de consumidores.
+El backend utiliza Java 21 y Spring Boot. El frontend utiliza Angular 21. El asistente de IA es un servicio aparte en Python 3.12 con FastAPI, que usa un modelo local servido por Ollama. La aplicación permite publicar y consumir mensajes, visualizar eventos y explorar conceptos como colas, tópicos, productores, consumidores y grupos de consumidores.
 
 El contrato OpenAPI de la API REST se encuentra en `backend`. La infraestructura local se gestiona mediante Docker Compose.
 
@@ -14,6 +14,7 @@ El contrato OpenAPI de la API REST se encuentra en `backend`. La infraestructura
 
 - `backend/`: aplicación Spring Boot, pruebas y contrato OpenAPI.
 - `frontend/`: aplicación Angular, componentes, servicios y pruebas.
+- `assistant/`: servicio del asistente de IA (Python y FastAPI) y sus pruebas. Solo lee datos del backend; no contiene lógica del laboratorio.
 - `infra/`: Docker Compose (RabbitMQ, backend y frontend) y plantilla de configuración local.
 - `specs/`: especificaciones organizadas por funcionalidad o hito.
 - `docs/`: constitución y documentación general del proyecto.
@@ -34,6 +35,7 @@ Mantén las responsabilidades de cada directorio y evita duplicar documentación
 - Tests de integración backend: `cd backend && ./mvnw verify` (requiere Docker en marcha)
 - Frontend: `cd frontend && npm start`
 - Tests frontend: `cd frontend && npm test`
+- Tests del asistente: `cd assistant && uv run pytest` (cuando exista el módulo, especificación 07)
 - Infraestructura: `docker compose -f infra/docker-compose.yml up -d --build`
 - Solo RabbitMQ: `docker compose -f infra/docker-compose.yml up -d rabbitmq`
 - Detener infraestructura: `docker compose -f infra/docker-compose.yml down`
@@ -45,6 +47,7 @@ Ejecuta únicamente los comandos correspondientes a los módulos existentes y a 
 
 - Java 21 y Spring Boot para el backend.
 - Angular 21 para el frontend, respetando las versiones fijadas en los archivos de configuración.
+- Python 3.12 con FastAPI para el servicio del asistente de IA, con dependencias gestionadas por uv y pruebas con pytest. Los modelos de IA son locales (Ollama): sin claves ni servicios externos.
 - RabbitMQ y Apache Kafka como sistemas de mensajería.
 - Docker Compose para ejecutar los servicios de infraestructura en local.
 - OpenAPI como contrato de referencia de la API REST.

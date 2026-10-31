@@ -15,9 +15,12 @@ services:
       # Credenciales públicas de RabbitMQ por defecto, solo válidas en local (el servicio no sale de esta máquina)
       RABBITMQ_DEFAULT_USER: ${RABBITMQ_USER:-guest}
       RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    # Arranca RabbitMQ con el trazado activado, que alimenta el visualizador de flujo (ver el propio guion).
+    entrypoint: ["/usr/local/bin/enable-trace.sh"]
     volumes:
       # Conserva exchanges, colas, bindings y mensajes. "down -v" lo elimina.
       - rabbitmq-data:/var/lib/rabbitmq
+      - ./rabbitmq/enable-trace.sh:/usr/local/bin/enable-trace.sh:ro
     healthcheck:
       test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
       interval: 10s
@@ -40,6 +43,9 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       # Cada cuánto envía el backend un latido por el flujo de eventos de los consumidores
       HEARTBEAT_INTERVAL: ${HEARTBEAT_INTERVAL:-15s}
+      # Modelo de IA del asistente (ver el servicio "ollama"). Dentro de la red de Compose es siempre el puerto 11434.
+      ASSISTANT_URL: http://ollama:11434
+      ASSISTANT_MODEL: ${ASSISTANT_MODEL:-qwen2.5:3b}
     # Solo garantiza que el nombre "rabbitmq" exista. No espera a que RabbitMQ esté sano: el backend debe
     # arrancar aunque RabbitMQ tarde, y conectarse cuando esté listo.
     depends_on:
@@ -56,5 +62,49 @@ services:
     depends_on:
       - backend
 
+  # ---- Asistente de IA (especificación 06) ----
+  # Modelo de lenguaje local, sin claves y sin que salga ningún dato de tu máquina. Para NO levantarlo (ocupa
+  # varios GB de disco y, mientras responde, de memoria), pon OLLAMA_REPLICAS=0 en infra/.env o delante del comando:
+  #   OLLAMA_REPLICAS=0 docker compose -f infra/docker-compose.yml up -d --build
+  # Sin él, todo lo demás funciona igual y el asistente se muestra como no disponible.
+  ollama:
+    image: ollama/ollama:0.40.13
+    deploy:
+      replicas: ${OLLAMA_REPLICAS:-1}
+    ports:
+      # Solo accesible desde la máquina local
+      - "127.0.0.1:${OLLAMA_PORT:-11434}:11434"
+    environment:
+      # Descarga el modelo de la memoria tras este tiempo sin preguntas
+      OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-5m}
+      # Una sola petición a la vez y un solo modelo cargado: el mínimo de memoria
+      OLLAMA_NUM_PARALLEL: "1"
+      OLLAMA_MAX_LOADED_MODELS: "1"
+    volumes:
+      # Conserva los modelos descargados. "down -v" los elimina.
+      - ollama-data:/root/.ollama
+    mem_limit: ${OLLAMA_MEMORY_LIMIT:-4g}
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  # Descarga el modelo la primera vez y termina. Si ya está en el volumen, no hace nada.
+  ollama-model:
+    image: ollama/ollama:0.40.13
+    deploy:
+      replicas: ${OLLAMA_REPLICAS:-1}
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: ollama:11434
+      ASSISTANT_MODEL: ${ASSISTANT_MODEL:-qwen2.5:3b}
+    entrypoint: ["sh", "-c", 'ollama list | grep -q "^$$ASSISTANT_MODEL " || ollama pull "$$ASSISTANT_MODEL"']
+    restart: "no"
+
 volumes:
   rabbitmq-data:
+  ollama-data:

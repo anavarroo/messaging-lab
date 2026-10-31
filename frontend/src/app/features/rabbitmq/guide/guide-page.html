@@ -5,6 +5,22 @@
     lleva de la mano por un ejemplo completo que haces tú mismo en este laboratorio.
   </p>
 
+  <nav class="submenu" #menu aria-label="Partes de la guía">
+    @for (item of views; track item.id) {
+      <button
+        type="button"
+        [class.active]="item.id === view()"
+        [attr.aria-current]="item.id === view() ? 'page' : null"
+        (click)="show(item.id)"
+      >
+        <span class="submenu-label">{{ item.label }}</span>
+        <span class="submenu-description">{{ item.description }}</span>
+      </button>
+    }
+  </nav>
+
+  @switch (view()) {
+  @case ('explicacion') {
   <nav class="index" id="indice" aria-label="Índice de la guía">
     <h4>En esta guía</h4>
     <ol>
@@ -349,11 +365,7 @@
   </section>
 
   <!-- ===================== Ejemplo paso a paso ===================== -->
-  <section class="guide-section" id="ejemplo" aria-labelledby="ejemplo-title">
-    <h4 id="ejemplo-title">Ejemplo paso a paso: la pizzería</h4>
-    <app-guide-example />
-    <p class="back"><a [routerLink]="[]" fragment="indice">Volver al índice</a></p>
-  </section>
+
 
   <!-- ===================== Si algo falla ===================== -->
   <section class="guide-section" id="si-algo-falla" aria-labelledby="falla-title">
@@ -386,4 +398,24 @@
     </dl>
     <p class="back"><a [routerLink]="[]" fragment="indice">Volver al índice</a></p>
   </section>
+  }
+  @case ('pizzeria') {
+  <section class="guide-section" id="ejemplo" aria-labelledby="ejemplo-title">
+    <h4 id="ejemplo-title">Ejemplo 1: la pizzería</h4>
+    <app-guide-example part="pizzeria" />
+  </section>
+  }
+  @case ('variante') {
+  <section class="guide-section" id="variante" aria-labelledby="variante-title">
+    <h4 id="variante-title">Ejemplo 2: la variante con un exchange fanout</h4>
+    <app-guide-example part="variante" />
+  </section>
+  }
+  @case ('generador') {
+  <section class="guide-section" id="generador" aria-labelledby="generador-title">
+    <h4 id="generador-title">Ejemplo 3: con el generador y el flujo en tiempo real</h4>
+    <app-guide-example part="generador" />
+  </section>
+  }
+  }
 </article>

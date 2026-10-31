@@ -67,6 +67,15 @@ class EmitterServiceTest {
 	}
 
 	@Test
+	void everyMessageSaysWhichEmitterPublishedIt() {
+		started(spec("brazo", Interval.fixed(500)));
+
+		pass(1_000);
+
+		assertThat(publisher.sources()).isNotEmpty().containsOnly("brazo");
+	}
+
+	@Test
 	void eachMessageIsGeneratedFromTheTemplate() {
 		started(spec("plantilla", Interval.fixed(100)));
 

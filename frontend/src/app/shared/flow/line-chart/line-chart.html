@@ -1,0 +1,51 @@
+<figure class="chart">
+  <figcaption>{{ title() }}</figcaption>
+  @if (empty()) {
+    <p class="empty">Todavía no hay datos.</p>
+  } @else {
+    <svg role="img" [attr.aria-label]="title() + ' (' + unit() + '), últimos ' + minutes() + '. Los mismos datos están en la tabla de debajo.'"
+      [attr.viewBox]="'0 0 ' + box.width + ' ' + box.height">
+      <line class="axis" [attr.x1]="box.left" [attr.y1]="box.bottom" [attr.x2]="box.right" [attr.y2]="box.bottom" />
+      <line class="axis" [attr.x1]="box.left" [attr.y1]="box.top" [attr.x2]="box.left" [attr.y2]="box.bottom" />
+      <text class="tick" [attr.x]="box.left - 6" [attr.y]="box.top + 4" text-anchor="end">{{ format(top()) }}</text>
+      <text class="tick" [attr.x]="box.left - 6" [attr.y]="box.bottom" text-anchor="end">0</text>
+      <text class="unit" [attr.x]="box.left" [attr.y]="box.top - 8">{{ unit() }}</text>
+      <text class="tick" [attr.x]="box.left" [attr.y]="box.height - 6">hace {{ minutes() }}</text>
+      <text class="tick" [attr.x]="box.right" [attr.y]="box.height - 6" text-anchor="end">ahora</text>
+      @for (line of drawn(); track line.name) {
+        <polyline [class]="'line series-' + (line.index % 5)" [attr.points]="line.points" [attr.stroke-dasharray]="line.dash || null" />
+      }
+    </svg>
+    <ul class="legend">
+      @for (line of drawn(); track line.name) {
+        <li>
+          <svg width="28" height="10" aria-hidden="true">
+            <line x1="0" y1="5" x2="28" y2="5" [class]="'line series-' + (line.index % 5)" [attr.stroke-dasharray]="line.dash || null" />
+          </svg>
+          {{ line.name }}
+        </li>
+      }
+    </ul>
+    <table>
+      <caption class="visually-hidden">{{ title() }} ({{ unit() }}): último valor, máximo y media</caption>
+      <thead>
+        <tr>
+          <th scope="col">Serie</th>
+          <th scope="col" class="number">Último</th>
+          <th scope="col" class="number">Máximo</th>
+          <th scope="col" class="number">Media</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (line of drawn(); track line.name) {
+          <tr>
+            <th scope="row">{{ line.name }}</th>
+            <td class="number">{{ format(line.last) }}</td>
+            <td class="number">{{ format(line.max) }}</td>
+            <td class="number">{{ format(line.average) }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</figure>

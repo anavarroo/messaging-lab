@@ -15,22 +15,26 @@ import org.junit.jupiter.api.Test;
  */
 class CoreIndependenceTest {
 
-	private static final Path CORE = Path.of("src/main/java/com/messaginglab/generator");
+	/** Núcleos neutrales respecto al sistema de mensajería: el del generador y el del visualizador de flujo. */
+	private static final List<Path> CORES = List.of(Path.of("src/main/java/com/messaginglab/generator"),
+			Path.of("src/main/java/com/messaginglab/flow"), Path.of("src/main/java/com/messaginglab/assistant"));
 
 	private static final List<String> FORBIDDEN = List.of("com.rabbitmq", "com.messaginglab.gateway",
 			"com.messaginglab.api", "com.messaginglab.model", "com.messaginglab.generator.rabbitmq",
-			"com.messaginglab.service", "org.springframework", "jakarta.");
+			"com.messaginglab.service", "com.messaginglab.flow.rabbitmq", "com.messaginglab.assistant.ollama", "org.springframework", "jakarta.");
 
 	@Test
 	void theCoreOnlyDependsOnTheJdkAndTheNeutralExceptions() throws IOException {
-		try (Stream<Path> files = Files.list(CORE)) {
-			List<Path> sources = files.filter(path -> path.toString().endsWith(".java")).toList();
-			assertThat(sources).hasSizeGreaterThan(10);
-			for (Path source : sources) {
-				List<String> imports = Files.readAllLines(source).stream().filter(line -> line.startsWith("import ")).toList();
-				for (String forbidden : FORBIDDEN) {
-					assertThat(imports).as(source.getFileName() + " no debe importar " + forbidden)
-						.noneMatch(line -> line.startsWith("import " + forbidden) || line.startsWith("import static " + forbidden));
+		for (Path core : CORES) {
+			try (Stream<Path> files = Files.list(core)) {
+				List<Path> sources = files.filter(path -> path.toString().endsWith(".java")).toList();
+				assertThat(sources).as(core.toString()).hasSizeGreaterThan(3);
+				for (Path source : sources) {
+					List<String> imports = Files.readAllLines(source).stream().filter(line -> line.startsWith("import ")).toList();
+					for (String forbidden : FORBIDDEN) {
+						assertThat(imports).as(source.getFileName() + " no debe importar " + forbidden)
+							.noneMatch(line -> line.startsWith("import " + forbidden) || line.startsWith("import static " + forbidden));
+					}
 				}
 			}
 		}

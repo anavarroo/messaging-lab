@@ -10,9 +10,11 @@ h5 {
 .modes {
   border: 0;
   padding: 0;
+  background: transparent;
 }
 
 .modes legend {
+  margin-bottom: var(--space-2);
   padding: 0;
   font-weight: 600;
 }
@@ -37,12 +39,12 @@ h5 {
 .consumer {
   margin: 0 0 1rem;
   padding: 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
 .consumer.stopped {
-  background: #fafafa;
+  background: var(--surface-2);
 }
 
 .consumer-header {
@@ -54,12 +56,12 @@ h5 {
 
 .meta {
   margin: 0.25rem 0 0.5rem;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .badge.active {
-  background: #eaf6ee;
-  color: #1b7a3a;
+  background: var(--success-soft);
+  color: var(--success);
 }
 
 .badge.warn {
@@ -70,7 +72,7 @@ h5 {
 .stop-message {
   margin: 0 0 0.75rem;
   padding: 0.5rem 0.75rem;
-  border-left: 4px solid #f2a900;
+  border-left: 4px solid var(--focus);
   background: #fff8e1;
   color: #5c4300;
 }
@@ -85,7 +87,7 @@ h5 {
 
 .message {
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 4px;
 }
 
@@ -127,10 +129,10 @@ h5 {
 }
 
 .outcome.discarded {
-  color: #7a1712;
+  color: var(--danger-ink);
 }
 
 .empty {
   margin: 0;
-  color: #555;
+  color: var(--text-muted);
 }

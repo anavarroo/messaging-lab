@@ -1,10 +1,19 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { ALL_STEPS, CLEANUP_STEPS, FANOUT_STEPS, MAIN_STEPS, NAMES, toParts } from './example-content';
-import { GuideExample } from './guide-example';
+import {
+  ALL_STEPS,
+  CLEANUP_STEPS,
+  FANOUT_STEPS,
+  GENERATOR_CLEANUP_STEPS,
+  GENERATOR_STEPS,
+  MAIN_STEPS,
+  NAMES,
+  toParts,
+} from './example-content';
+import { ExamplePart, GuideExample } from './guide-example';
 
 describe('GuideExample', () => {
-  const AREAS = ['exchanges', 'queues', 'bindings', 'publish', 'consumers'].map((a) => `/rabbitmq/${a}`);
+  const AREAS = ['exchanges', 'queues', 'bindings', 'publish', 'consumers', 'generator', 'flow'].map((a) => `/rabbitmq/${a}`);
 
   let fixture: ComponentFixture<GuideExample>;
   let page: HTMLElement;
@@ -14,24 +23,38 @@ describe('GuideExample', () => {
       imports: [GuideExample],
       providers: [provideRouter([])],
     }).compileComponents();
+    await render('pizzeria');
+  });
+
+  async function render(part: ExamplePart) {
     fixture = TestBed.createComponent(GuideExample);
+    fixture.componentRef.setInput('part', part);
     page = fixture.nativeElement as HTMLElement;
     fixture.detectChanges();
     await fixture.whenStable();
-  });
+  }
 
   const articles = () => Array.from(page.querySelectorAll<HTMLElement>('article.step'));
 
   describe('structure (CA-4.2)', () => {
-    it('shows every step', () => {
-      expect(articles()).toHaveLength(ALL_STEPS.length);
+    it('shows the steps of the example it is asked for, and only those', async () => {
+      expect(articles()).toHaveLength(MAIN_STEPS.length);
+
+      await render('variante');
+      expect(articles()).toHaveLength(FANOUT_STEPS.length + CLEANUP_STEPS.length);
+
+      await render('generador');
+      expect(articles()).toHaveLength(GENERATOR_STEPS.length + GENERATOR_CLEANUP_STEPS.length);
     });
 
-    it('gives every step its three parts, always in the same order', () => {
-      articles().forEach((article) => {
-        const parts = Array.from(article.querySelectorAll('h6')).map((h) => h.textContent?.trim());
-        expect(parts).toEqual(['Haz esto', 'Deberías ver', 'Qué ha pasado']);
-      });
+    it('gives every step of every example its three parts, always in the same order', async () => {
+      for (const part of ['pizzeria', 'variante', 'generador'] as const) {
+        await render(part);
+        articles().forEach((article) => {
+          const parts = Array.from(article.querySelectorAll('h6')).map((h) => h.textContent?.trim());
+          expect(parts).toEqual(['Haz esto', 'Deberías ver', 'Qué ha pasado']);
+        });
+      }
     });
 
     it('fills every part with something to do, something to compare and an explanation', () => {
@@ -43,10 +66,13 @@ describe('GuideExample', () => {
       });
     });
 
-    it('numbers the steps continuously, from 1, across the three parts', () => {
-      const titles = articles().map((a) => a.querySelector('h5')?.textContent?.trim() ?? '');
+    it('numbers the steps from 1 in each example, continuing through its cleanup', async () => {
+      for (const part of ['pizzeria', 'variante', 'generador'] as const) {
+        await render(part);
+        const titles = articles().map((a) => a.querySelector('h5')?.textContent?.trim() ?? '');
 
-      titles.forEach((title, index) => expect(title.startsWith(`Paso ${index + 1}. `)).toBe(true));
+        titles.forEach((title, index) => expect(title.startsWith(`Paso ${index + 1}. `)).toBe(true));
+      }
     });
 
     it('labels each step by its title and uses unique ids', () => {
@@ -57,14 +83,14 @@ describe('GuideExample', () => {
       });
     });
 
-    it('splits the example into the pizzeria, the fanout variant and the optional cleanup', () => {
-      const groups = Array.from(page.querySelectorAll('h5.group')).map((h) => h.textContent?.trim());
+    it('only the variant and the generator example end with an optional cleanup', async () => {
+      const groups = () => Array.from(page.querySelectorAll('h5.group')).map((h) => h.textContent?.trim());
 
-      expect(groups).toEqual([
-        'Parte 1. La pizzería',
-        'Parte 2. Variante: un aviso para todos con un exchange fanout',
-        'Parte 3. Opcional: dejar el laboratorio limpio',
-      ]);
+      expect(groups()).toEqual([]);
+      await render('variante');
+      expect(groups()).toEqual(['Opcional: dejar el laboratorio limpio']);
+      await render('generador');
+      expect(groups()).toEqual(['Opcional: dejar el laboratorio limpio']);
     });
 
     it('explains what is going to be built and gives tips before the first step', () => {
@@ -98,7 +124,9 @@ describe('GuideExample', () => {
 
     it('uses link texts that match the names of the lab tabs', () => {
       const labels = new Set(ALL_STEPS.map((step) => step.link.label));
-      labels.forEach((label) => expect(['Exchanges', 'Colas', 'Bindings', 'Publicación', 'Consumidores']).toContain(label));
+      labels.forEach((label) =>
+        expect(['Exchanges', 'Colas', 'Bindings', 'Publicación', 'Consumidores', 'Generador', 'Flujo']).toContain(label),
+      );
     });
   });
 
@@ -158,13 +186,14 @@ describe('GuideExample', () => {
       expect(FANOUT_STEPS[2].shouldSee.join(' ')).toContain('Listos 1');
     });
 
-    it('ends with an optional cleanup that removes everything the example created (CA-4.6)', () => {
-      expect(ALL_STEPS[ALL_STEPS.length - 1].id).toBe('limpiar-exchanges');
+    it('ends the variant with an optional cleanup that removes everything examples 1 and 2 created (CA-4.6)', async () => {
+      expect(CLEANUP_STEPS[CLEANUP_STEPS.length - 1].id).toBe('limpiar-exchanges');
       const text = CLEANUP_STEPS.flatMap((step) => step.actions).join(' ');
 
       for (const name of [NAMES.kitchen, NAMES.bar, NAMES.kitchenDlq, NAMES.exchange, NAMES.fanout]) {
         expect(text).toContain(name);
       }
+      await render('variante');
       expect(page.textContent).toContain('Es opcional');
     });
 
@@ -176,9 +205,88 @@ describe('GuideExample', () => {
     });
   });
 
+  describe('example 3: the generator seen from the flow (CA-6.3)', () => {
+    const ids = GENERATOR_STEPS.map((step) => step.id);
+    const at = (id: string) => ids.indexOf(id);
+    const step = (id: string) => GENERATOR_STEPS.find((s) => s.id === id)!;
+
+    it('first builds the exchange, the queue and the binding the emitter will use, and opens the flow before anything moves', () => {
+      expect(ids.slice(0, 4)).toEqual(['gen-exchange', 'gen-cola', 'gen-binding', 'gen-flujo-vacio']);
+      expect(step('gen-flujo-vacio').shouldSee.join(' ')).toContain('No hay flujo activo ahora mismo');
+    });
+
+    it('creates an emitter that publishes to an exchange, using a template of the catalog, and then watches it in the flow', () => {
+      const emitter = step('gen-emisor-exchange').actions.join(' ');
+
+      expect(emitter).toContain('Plantilla del catálogo');
+      expect(emitter).toContain('Usar plantilla');
+      expect(emitter).toContain('A un exchange');
+      expect(emitter).toContain('Iniciar');
+      expect(step('gen-emisor-exchange').link.path).toBe('/rabbitmq/generator');
+      expect(at('gen-ver-emisor')).toBe(at('gen-emisor-exchange') + 1);
+      expect(step('gen-ver-emisor').link.path).toBe('/rabbitmq/flow');
+    });
+
+    it('creates a simulated consumer and shows the queue emptying', () => {
+      expect(at('gen-consumidor')).toBeGreaterThan(at('gen-ver-emisor'));
+      expect(step('gen-consumidor').actions.join(' ')).toContain('Crear consumidor');
+      expect(step('gen-ver-consumidor').shouldSee.join(' ')).toContain('Entrega');
+    });
+
+    it('also publishes directly to a queue and explains the default exchange that appears', () => {
+      expect(step('gen-emisor-cola').actions.join(' ')).toContain('Directamente a una cola');
+      expect(step('gen-ver-cola').shouldSee.join(' ')).toContain('(exchange por defecto)');
+      expect(step('gen-ver-cola').whatHappened).toContain('exchange por defecto');
+    });
+
+    it('shows a queue growing when publishing faster than consuming', () => {
+      expect(step('gen-ver-cola').shouldSee.join(' ')).toContain('suben sin parar');
+    });
+
+    it('teaches the controls of the flow screen and ends by stopping everything', () => {
+      const controls = step('gen-controles').actions.join(' ');
+
+      expect(controls).toContain('Filtrar por nombre o routing key');
+      expect(controls).toContain('Cámara lenta');
+      expect(controls).toContain('Pausar animación');
+      expect(ids[ids.length - 1]).toBe('gen-parar');
+      expect(step('gen-parar').actions.join(' ')).toContain('Parar todo');
+    });
+
+    it('uses the names of the templates of the generator catalog', () => {
+      expect(NAMES.temperatureEmitter).toBe('Sensor de temperatura');
+      expect(NAMES.robotEmitter).toBe('Brazo robótico');
+    });
+
+    it('the cleanup removes what the example created', () => {
+      const text = GENERATOR_CLEANUP_STEPS.flatMap((s) => s.actions).join(' ');
+
+      for (const name of [NAMES.temperatureEmitter, NAMES.robotEmitter, NAMES.reader, NAMES.readings, NAMES.sensors]) {
+        expect(text).toContain(name);
+      }
+    });
+
+    it('is independent of examples 1 and 2: it does not use their names', () => {
+      const text = [...GENERATOR_STEPS, ...GENERATOR_CLEANUP_STEPS].flatMap((s) => [...s.actions, ...s.shouldSee]).join(' ');
+
+      for (const name of [NAMES.exchange, NAMES.kitchen, NAMES.bar, NAMES.fanout]) {
+        expect(text).not.toContain(`[[${name}]]`);
+      }
+    });
+  });
+
   describe('consistent names (CA-4.5)', () => {
     const allowed = new Set<string>([
       ...Object.values(NAMES),
+      '1000',
+      '200',
+      '0',
+      'En marcha',
+      'Parado',
+      'Directamente a una cola',
+      '(exchange por defecto)',
+      'planta1.#',
+      'Cámara lenta (÷10)',
       'Topic',
       'Fanout',
       'Manual',

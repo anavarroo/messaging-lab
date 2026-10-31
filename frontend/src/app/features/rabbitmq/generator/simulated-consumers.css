@@ -12,7 +12,7 @@
 .processing {
   margin: 0 0 0.75rem;
   padding: 0.75rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
@@ -32,7 +32,7 @@
 
 .consumer {
   padding: 0.75rem 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
@@ -48,25 +48,25 @@
 
 .where {
   margin: 0.25rem 0 0.5rem;
-  color: #555;
+  color: var(--text-muted);
 }
 
 .badge {
   align-self: flex-start;
   padding: 0.1rem 0.5rem;
   border-radius: 999px;
-  background: #eee;
+  background: var(--border);
   font-size: 0.85rem;
 }
 
 .badge.status-running {
-  background: #eaf6ee;
-  color: #145c2b;
+  background: var(--success-soft);
+  color: var(--success);
 }
 
 .badge.status-failed {
-  background: #fdecea;
-  color: #7a1712;
+  background: var(--danger-soft);
+  color: var(--danger-ink);
 }
 
 .counters {
@@ -93,7 +93,7 @@
 
 .stop-message {
   margin: 0 0 0.5rem;
-  color: #7a1712;
+  color: var(--danger-ink);
 }
 
 .empty {

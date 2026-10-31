@@ -20,6 +20,9 @@ import org.springframework.stereotype.Component;
 @Component
 class AmqpConnectionProvider {
 
+	/** Nombre con el que el laboratorio se presenta a RabbitMQ. */
+	static final String CONNECTION_NAME = "messaging-lab";
+
 	private static final int CONNECTION_TIMEOUT_MILLIS = 5_000;
 
 	private final ConnectionFactory factory;
@@ -49,7 +52,7 @@ class AmqpConnectionProvider {
 
 	private Connection open() {
 		try {
-			return factory.newConnection("messaging-lab");
+			return factory.newConnection(CONNECTION_NAME);
 		}
 		catch (PossibleAuthenticationFailureException exception) {
 			throw new BrokerRejectedException("RabbitMQ ha rechazado las credenciales configuradas.", exception);

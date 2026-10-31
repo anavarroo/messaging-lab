@@ -25,7 +25,7 @@ export const MESSAGES_REFRESH_MS = 2_000;
 @Component({
   selector: 'app-queue-messages-panel',
   templateUrl: './queue-messages-panel.html',
-  styleUrls: ['../shared/lab-area.css', './queue-messages-panel.css'],
+  styleUrls: ['../../../shared/lab-area.css', './queue-messages-panel.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class QueueMessagesPanel {

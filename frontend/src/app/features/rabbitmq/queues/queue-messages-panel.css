@@ -1,7 +1,7 @@
 .panel {
   margin-top: 1.5rem;
   padding: 1rem;
-  border: 1px solid #ddd;
+  border: 1px solid var(--border);
   border-radius: 6px;
 }
 
@@ -13,7 +13,7 @@
 .warning {
   margin: 0 0 0.75rem;
   padding: 0.5rem 0.75rem;
-  border-left: 4px solid #f2a900;
+  border-left: 4px solid var(--focus);
   background: #fff8e1;
   color: #5c4300;
 }
