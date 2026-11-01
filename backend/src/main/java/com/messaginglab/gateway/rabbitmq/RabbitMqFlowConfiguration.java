@@ -50,7 +50,7 @@ class RabbitMqFlowConfiguration {
 	}
 
 	@Bean
-	com.messaginglab.assistant.SnapshotProvider assistantSnapshotProvider(BrokerTopology broker, ManagementApiClient management,
+	com.messaginglab.diagnostics.SnapshotProvider labSnapshotProvider(BrokerTopology broker, ManagementApiClient management,
 			com.messaginglab.generator.EmitterService emitters,
 			com.messaginglab.generator.rabbitmq.SimulatedConsumerService consumers, FlowService flow) {
 		return new RabbitMqSnapshotProvider(broker, management, emitters, consumers, flow, Clock.systemUTC());

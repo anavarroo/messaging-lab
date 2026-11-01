@@ -69,8 +69,12 @@ describe('leaving the RabbitMQ lab with consumers (CA-9.14)', () => {
   });
 
   afterEach(() => {
-    // al salir del laboratorio se abre la pantalla de estado, que comprueba RabbitMQ; eso se prueba aparte
-    http.match((request) => request.url.startsWith('/api/') && request.url.endsWith('/status'));
+    // al salir del laboratorio se abre la pantalla de estado, que comprueba RabbitMQ y si se puede parar y
+    // levantar; eso se prueba aparte
+    http.match(
+      (request) =>
+        (request.url.startsWith('/api/') && request.url.endsWith('/status')) || request.url === '/api/control/services',
+    );
     http.verify();
   });
 

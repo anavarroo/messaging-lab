@@ -1,7 +1,7 @@
 package com.messaginglab.gateway.rabbitmq;
 
-import com.messaginglab.assistant.Snapshot;
-import com.messaginglab.assistant.SnapshotProvider;
+import com.messaginglab.diagnostics.Snapshot;
+import com.messaginglab.diagnostics.SnapshotProvider;
 import com.messaginglab.exception.LabException;
 import com.messaginglab.flow.FlowService;
 import com.messaginglab.flow.FlowSourceStatus;

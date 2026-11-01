@@ -6,16 +6,16 @@ Laboratorio visual para aprender, experimentar y comparar sistemas de mensajerí
 
 El proyecto se desarrolla en un único repositorio Git (monorepo) que contiene el backend, el frontend, el asistente de IA, la infraestructura, las especificaciones, la documentación y las instrucciones para los agentes de IA.
 
-El backend utiliza Java 21 y Spring Boot. El frontend utiliza Angular 21. El asistente de IA es un servicio aparte en Python 3.12 con FastAPI, que usa un modelo local servido por Ollama. La aplicación permite publicar y consumir mensajes, visualizar eventos y explorar conceptos como colas, tópicos, productores, consumidores y grupos de consumidores.
+El backend utiliza Java 21 y Spring Boot. El frontend utiliza Angular 21. El asistente de IA es un servicio aparte en Python 3.12 con FastAPI, que usa modelos locales servidos por Ollama (uno para responder y otro de embeddings para buscar en la documentación). La aplicación permite publicar y consumir mensajes, visualizar eventos y explorar conceptos como colas, tópicos, productores, consumidores y grupos de consumidores.
 
-El contrato OpenAPI de la API REST se encuentra en `backend`. La infraestructura local se gestiona mediante Docker Compose.
+Hay dos contratos OpenAPI: el de la API del backend (`backend/api/api.yml`) y el del asistente (`assistant/api/api.yml`). La infraestructura local se gestiona mediante Docker Compose.
 
 ## Estructura del repositorio
 
 - `backend/`: aplicación Spring Boot, pruebas y contrato OpenAPI.
 - `frontend/`: aplicación Angular, componentes, servicios y pruebas.
-- `assistant/`: servicio del asistente de IA (Python y FastAPI) y sus pruebas. Solo lee datos del backend; no contiene lógica del laboratorio.
-- `infra/`: Docker Compose (RabbitMQ, backend y frontend) y plantilla de configuración local.
+- `assistant/`: servicio del asistente de IA (Python y FastAPI), su contrato OpenAPI, sus pruebas y su evaluación. Solo lee datos del backend (por GET); no contiene lógica del laboratorio, que está en el backend.
+- `infra/`: Docker Compose (RabbitMQ, backend, frontend, asistente, Ollama e intermediario de Docker), sus archivos auxiliares (`rabbitmq/`, `docker-proxy/`) y la plantilla de configuración local (`.env.example`).
 - `specs/`: especificaciones organizadas por funcionalidad o hito.
 - `docs/`: constitución y documentación general del proyecto.
 - `AGENTS.md`: instrucciones generales para los agentes de IA.
@@ -34,12 +34,15 @@ Mantén las responsabilidades de cada directorio y evita duplicar documentación
 - Tests backend: `cd backend && ./mvnw test`
 - Tests de integración backend: `cd backend && ./mvnw verify` (requiere Docker en marcha)
 - Frontend: `cd frontend && npm start`
-- Tests frontend: `cd frontend && npm test`
-- Tests del asistente: `cd assistant && uv run pytest` (cuando exista el módulo, especificación 07)
+- Tests frontend: `cd frontend && npm test -- --watch=false` (sin `--watch=false`, en una terminal interactiva se queda vigilando cambios y no termina)
+- Asistente de IA en local: `cd assistant && uv run uvicorn app.main:app --port 8000`
+- Tests del asistente: `cd assistant && uv run pytest`
+- Evaluación del asistente (contra un stack levantado; ver README): `cd assistant && uv run pytest -m evaluation tests/test_evaluation.py -s`
 - Infraestructura: `docker compose -f infra/docker-compose.yml up -d --build`
+- Infraestructura sin el asistente de IA ni Ollama: `OLLAMA_REPLICAS=0 docker compose -f infra/docker-compose.yml up -d --build`
 - Solo RabbitMQ: `docker compose -f infra/docker-compose.yml up -d rabbitmq`
 - Detener infraestructura: `docker compose -f infra/docker-compose.yml down`
-- Detener infraestructura y borrar sus datos: `docker compose -f infra/docker-compose.yml down -v`
+- Detener infraestructura y borrar sus datos: `docker compose -f infra/docker-compose.yml down -v` (borra también los modelos de IA descargados; no lo ejecutes sin que el usuario lo pida)
 
 Ejecuta únicamente los comandos correspondientes a los módulos existentes y a las herramientas realmente configuradas. Si un comando no está disponible o requiere una configuración previa, indícalo sin asumir que ha funcionado.
 
@@ -64,17 +67,18 @@ Ejecuta únicamente los comandos correspondientes a los módulos existentes y a 
 - No modifiques archivos de `specs/` salvo petición explícita o autorización dentro del flujo de trabajo acordado.
 - No añadas dependencias, cambies contratos de API ni alteres decisiones arquitectónicas aprobadas sin justificar el cambio y obtener la aprobación necesaria.
 - Si una tarea afecta a varios módulos, identifica y valida todos los componentes afectados.
-- Mantén separados el frontend, el backend y la infraestructura.
+- Mantén separados el frontend, el backend, el asistente y la infraestructura.
 - Evita acoplar la lógica de negocio a RabbitMQ o Kafka; utiliza adaptadores o abstracciones cuando lo establezca la arquitectura.
-- Mantén sincronizado `backend/api/api.yml` con la implementación de la API y valida los cambios de contrato.
+- Mantén sincronizados `backend/api/api.yml` y `assistant/api/api.yml` con la implementación de sus APIs y valida los cambios de contrato.
+- El manual del asistente (`assistant/app/knowledge.py`) tiene escritos a mano datos del proyecto: versiones, pestañas, puertos, variables y comandos. Si cambias alguno, actualiza también sus fichas.
 - No introduzcas credenciales, secretos ni configuraciones locales sensibles en el repositorio.
 - No afirmes que una prueba o validación ha pasado si no se ha ejecutado y comprobado su resultado.
 
 ## Al terminar cualquier tarea
 
 - Ejecuta las pruebas pertinentes del módulo afectado y, cuando sea viable, las pruebas de regresión del proyecto.
-- Comprueba que los cambios respetan las especificaciones, la constitución y el contrato OpenAPI.
-- Verifica todos los módulos afectados si el cambio cruza los límites del backend, frontend o infraestructura.
+- Comprueba que los cambios respetan las especificaciones, la constitución y los contratos OpenAPI.
+- Verifica todos los módulos afectados si el cambio cruza los límites del backend, el frontend, el asistente o la infraestructura.
 - Resume los cambios realizados, las pruebas ejecutadas y sus resultados.
 - Si alguna prueba no se ha podido ejecutar, explica el motivo.
 - Si detectas que una especificación debe actualizarse, indícalo explícitamente.

@@ -1,12 +1,11 @@
 package com.messaginglab.controller;
 
 import com.messaginglab.api.model.ApiError;
-import com.messaginglab.assistant.AssistantTimeoutException;
-import com.messaginglab.assistant.AssistantUnavailableException;
 import com.messaginglab.exception.BrokerRejectedException;
 import com.messaginglab.exception.BrokerTimeoutException;
 import com.messaginglab.exception.BrokerUnavailableException;
 import com.messaginglab.exception.ConflictException;
+import com.messaginglab.exception.ControlUnavailableException;
 import com.messaginglab.exception.LabException;
 import com.messaginglab.exception.NotFoundException;
 import com.messaginglab.exception.ValidationException;
@@ -57,14 +56,9 @@ public class ApiExceptionHandler {
 		return respond(HttpStatus.BAD_GATEWAY, ApiError.CodeEnum.BROKER_REJECTED, exception);
 	}
 
-	@ExceptionHandler(AssistantUnavailableException.class)
-	ResponseEntity<ApiError> assistantUnavailable(AssistantUnavailableException exception) {
-		return respond(HttpStatus.SERVICE_UNAVAILABLE, ApiError.CodeEnum.ASSISTANT_UNAVAILABLE, exception);
-	}
-
-	@ExceptionHandler(AssistantTimeoutException.class)
-	ResponseEntity<ApiError> assistantTimeout(AssistantTimeoutException exception) {
-		return respond(HttpStatus.GATEWAY_TIMEOUT, ApiError.CodeEnum.TIMEOUT, exception);
+	@ExceptionHandler(ControlUnavailableException.class)
+	ResponseEntity<ApiError> controlUnavailable(ControlUnavailableException exception) {
+		return respond(HttpStatus.SERVICE_UNAVAILABLE, ApiError.CodeEnum.CONTROL_UNAVAILABLE, exception);
 	}
 
 	@ExceptionHandler(MissingServletRequestParameterException.class)

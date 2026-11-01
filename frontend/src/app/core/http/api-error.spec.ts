@@ -21,6 +21,8 @@ describe('toApiError', () => {
     ['BROKER_UNAVAILABLE', 503, 'broker-unavailable'],
     ['TIMEOUT', 504, 'timeout'],
     ['BROKER_REJECTED', 502, 'broker-rejected'],
+    // 503 como cuando el backend no responde, pero con su propio mensaje: el que falla es Docker
+    ['CONTROL_UNAVAILABLE', 503, 'control-unavailable'],
   ])('uses the message and kind of a backend %s error', (code, status, kind) => {
     const error = toApiError(http(status, { code, message: 'Mensaje del backend.' }));
 

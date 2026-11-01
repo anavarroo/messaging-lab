@@ -83,7 +83,6 @@
 							<schemaMappings>
 								<schemaMapping>ConsumerEventStream=org.springframework.web.servlet.mvc.method.annotation.SseEmitter</schemaMapping>
 								<schemaMapping>FlowEventStream=org.springframework.web.servlet.mvc.method.annotation.SseEmitter</schemaMapping>
-								<schemaMapping>AssistantEventStream=org.springframework.web.servlet.mvc.method.annotation.SseEmitter</schemaMapping>
 							</schemaMappings>
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>

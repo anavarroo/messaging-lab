@@ -195,6 +195,18 @@ describe('AssistantWidget', () => {
       expect(text.querySelector('img, b')).toBeNull();
     });
 
+    it('shows the bold, italics and code the model writes, without adding spaces', () => {
+      fake.messages.set([{ role: 'ASSISTANT', text: '7. **Acciones**: usa `trace_on`, *solo* en local.\n- **<b>x</b>**' }]);
+      fixture.detectChanges();
+
+      const text = root.querySelector('.message .text')!;
+      expect(text.textContent).toBe('7. Acciones: usa trace_on, solo en local.\n- <b>x</b>');
+      expect(Array.from(text.querySelectorAll('strong')).map((e) => e.textContent)).toEqual(['Acciones', '<b>x</b>']);
+      expect(text.querySelector('code')?.textContent).toBe('trace_on');
+      expect(text.querySelector('em')?.textContent).toBe('solo');
+      expect(text.querySelector('b')).toBeNull();
+    });
+
     it('announces new answers politely', () => {
       expect(root.querySelector('.messages')?.getAttribute('aria-live')).toBe('polite');
     });

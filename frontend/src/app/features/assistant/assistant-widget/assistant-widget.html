@@ -51,7 +51,8 @@
         <div class="message" [class.user]="message.role === 'USER'" [class.assistant]="message.role === 'ASSISTANT'">
           <span class="visually-hidden">{{ message.role === 'USER' ? 'Tú:' : 'Asistente:' }}</span>
           @if (message.text) {
-            <p class="text">{{ message.text }}</p>
+            <!-- en una sola línea: el texto conserva los espacios (pre-wrap) y la sangría se vería -->
+            <p class="text">@for (segment of format(message.text); track $index) {@switch (segment.format) {@case ('bold') {<strong>{{ segment.text }}</strong>} @case ('italic') {<em>{{ segment.text }}</em>} @case ('code') {<code>{{ segment.text }}</code>} @default {{{ segment.text }}}}}</p>
           } @else if (!message.error && !message.cancelled) {
             <p class="text typing">Pensando…</p>
           }

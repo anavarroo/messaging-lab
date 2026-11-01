@@ -1,6 +1,6 @@
 # Especificación 07 — Asistente de IA desacoplado, con herramientas
 
-- **Estado:** Propuesta pendiente de revisión
+- **Estado:** Aprobada
 - **Fecha:** 2026-10-31
 - **Referencias:** [especificación 06](../06-ai-assistant/spec.md)
 
@@ -35,7 +35,7 @@ Todo sigue siendo **local, sin claves, de solo lectura y arrancable con un únic
 ### RF-2 — Herramientas de solo lectura
 - **CA-2.1:** El asistente tendrá herramientas **de solo lectura**: estado de RabbitMQ y del trazado; colas con listos, pendientes, consumidores y ritmos; exchanges con sus bindings; emisores y consumidores simulados; actividad actual; y **diagnóstico** (las conclusiones de las reglas de la especificación 06). Se apoyan en la **API REST que ya tiene el backend**.
 - **CA-2.2:** Ninguna herramienta podrá cambiar nada (solo hacen consultas GET) ni devolverá cuerpos de mensajes.
-- **CA-2.3:** El backend añadirá solo dos operaciones de lectura a su contrato: **diagnóstico** y **actividad**, que reutilizan las reglas ya escritas y probadas en Java. El resto de datos sale de las operaciones existentes.
+- **CA-2.3:** El backend añadirá solo tres operaciones de lectura a su contrato: **diagnóstico** y **actividad**, que reutilizan las reglas ya escritas y probadas en Java, y la **foto del laboratorio** (colas con consumidores y ritmos, exchanges con sus colas, generador y carga), que la API existente no da completa. Todo lo demás sale de las operaciones existentes.
 - **CA-2.4:** Las herramientas devolverán los datos ya resumidos y en español, listos para leer, con un tamaño acotado.
 - **CA-2.4b:** Las herramientas se definen en el servicio del asistente; cuando llegue Kafka se añadirán las suyas sobre su API, sin cambiar el resto del asistente.
 

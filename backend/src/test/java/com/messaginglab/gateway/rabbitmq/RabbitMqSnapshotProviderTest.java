@@ -6,7 +6,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withServerError;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import com.messaginglab.assistant.Snapshot;
+import com.messaginglab.diagnostics.Snapshot;
 import com.messaginglab.exception.BrokerUnavailableException;
 import com.messaginglab.flow.FlowEvent;
 import com.messaginglab.flow.FlowSource;

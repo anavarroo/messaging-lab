@@ -15,20 +15,22 @@ import org.junit.jupiter.api.Test;
  */
 class CoreIndependenceTest {
 
-	/** Núcleos neutrales respecto al sistema de mensajería: el del generador y el del visualizador de flujo. */
+	/** Núcleos sin dependencias de infraestructura: generador, visualizador de flujo, diagnóstico y control de servicios. */
 	private static final List<Path> CORES = List.of(Path.of("src/main/java/com/messaginglab/generator"),
-			Path.of("src/main/java/com/messaginglab/flow"), Path.of("src/main/java/com/messaginglab/assistant"));
+			Path.of("src/main/java/com/messaginglab/flow"), Path.of("src/main/java/com/messaginglab/diagnostics"),
+			Path.of("src/main/java/com/messaginglab/control"));
 
 	private static final List<String> FORBIDDEN = List.of("com.rabbitmq", "com.messaginglab.gateway",
 			"com.messaginglab.api", "com.messaginglab.model", "com.messaginglab.generator.rabbitmq",
-			"com.messaginglab.service", "com.messaginglab.flow.rabbitmq", "com.messaginglab.assistant.ollama", "org.springframework", "jakarta.");
+			"com.messaginglab.service", "com.messaginglab.flow.rabbitmq", "org.springframework", "jakarta.");
 
 	@Test
 	void theCoreOnlyDependsOnTheJdkAndTheNeutralExceptions() throws IOException {
 		for (Path core : CORES) {
 			try (Stream<Path> files = Files.list(core)) {
 				List<Path> sources = files.filter(path -> path.toString().endsWith(".java")).toList();
-				assertThat(sources).as(core.toString()).hasSizeGreaterThan(3);
+				// si la carpeta estuviera vacía, la ruta estaría mal escrita y la prueba no comprobaría nada
+				assertThat(sources).as(core.toString()).isNotEmpty();
 				for (Path source : sources) {
 					List<String> imports = Files.readAllLines(source).stream().filter(line -> line.startsWith("import ")).toList();
 					for (String forbidden : FORBIDDEN) {

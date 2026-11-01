@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, OnInit, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ApiError } from '../../../core/http/api-error';
+import { ServiceControls } from '../service-controls/service-controls';
 import { RabbitMqHealthApi, TracingStatus } from './rabbitmq-health-api';
 
 type Connection = { kind: 'checking' } | { kind: 'connected'; version: string } | { kind: 'unavailable'; message: string };
@@ -10,6 +11,7 @@ type Tracing = { kind: 'checking' } | { kind: 'known'; status: TracingStatus } |
 /** Comprueba que RabbitMQ está levantado y si tiene el trazado activo, que es lo que necesita el visualizador de flujo. */
 @Component({
   selector: 'app-rabbitmq-status',
+  imports: [ServiceControls],
   templateUrl: './rabbitmq-status.html',
   styleUrl: './rabbitmq-status.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

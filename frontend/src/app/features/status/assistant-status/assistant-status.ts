@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit, inject } from '@angular/core';
 import { AssistantChat } from '../../assistant/assistant-chat';
+import { ServiceControls } from '../service-controls/service-controls';
 
 /**
  * Estado del asistente de IA, en su propia tarjeta: el asistente no es de RabbitMQ (responderá también sobre Kafka).
@@ -7,6 +8,7 @@ import { AssistantChat } from '../../assistant/assistant-chat';
  */
 @Component({
   selector: 'app-assistant-status',
+  imports: [ServiceControls],
   templateUrl: './assistant-status.html',
   styleUrl: '../rabbitmq-status/rabbitmq-status.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

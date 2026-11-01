@@ -17,6 +17,7 @@ export type ApiErrorKind =
   | 'not-found'
   | 'conflict'
   | 'broker-rejected'
+  | 'control-unavailable'
   | 'unknown';
 
 /** Error del backend tal como lo define el contrato (`ApiError`). */
@@ -48,6 +49,7 @@ const KIND_BY_CODE: Record<string, ApiErrorKind> = {
   BROKER_UNAVAILABLE: 'broker-unavailable',
   TIMEOUT: 'timeout',
   BROKER_REJECTED: 'broker-rejected',
+  CONTROL_UNAVAILABLE: 'control-unavailable',
 };
 
 /** Códigos con los que un proxy indica que no ha podido alcanzar el backend. */

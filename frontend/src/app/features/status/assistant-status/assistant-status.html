@@ -28,4 +28,6 @@
   </div>
 
   <button type="button" (click)="chat.refreshStatus()">Volver a comprobar</button>
+
+  <app-service-controls service="ASSISTANT" [up]="chat.status()?.state === 'READY'" (recheck)="chat.refreshStatus()" />
 </section>

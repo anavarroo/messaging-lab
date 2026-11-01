@@ -1,0 +1,29 @@
+@let control = api.status();
+@let svc = current();
+@if (control && !control.available) {
+  <p class="help unavailable">{{ control.reason }}</p>
+} @else if (svc?.state === 'MISSING') {
+  <p class="help unavailable">{{ svc?.message }}</p>
+} @else if (svc) {
+  <div class="buttons">
+    <button type="button" (click)="start()" [disabled]="busy() !== null || svc.state === 'RUNNING'">Levantar</button>
+    <button type="button" class="stop" (click)="stop()" [disabled]="busy() !== null || svc.state === 'STOPPED'">Parar</button>
+    <span class="progress" role="status">
+      @switch (busy()) {
+        @case ('starting') {
+          Levantando…
+        }
+        @case ('stopping') {
+          Parando…
+        }
+      }
+    </span>
+  </div>
+  @if (slow()) {
+    <p class="warning">Tarda más de lo normal en responder. Vuelve a comprobarlo en un momento.</p>
+  }
+}
+@if (error(); as message) {
+  <p class="error" role="alert">{{ message }}</p>
+}
+<app-confirm-dialog />

@@ -9,6 +9,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { AssistantChat, MAX_QUESTION } from '../assistant-chat';
+import { formatSegments } from './formatted-text';
 
 /**
  * Botón del asistente en la cabecera y su panel de chat. El panel se abre sobre la pantalla actual, sin cambiar de
@@ -26,6 +27,8 @@ export class AssistantWidget implements OnInit {
   protected readonly open = signal(false);
   protected readonly question = signal('');
   protected readonly max = MAX_QUESTION;
+  /** El formato básico (negrita, cursiva, código) que escribe el modelo, sin HTML. */
+  protected readonly format = formatSegments;
 
   private readonly toggleButton = viewChild.required<ElementRef<HTMLButtonElement>>('toggleButton');
   private readonly input = viewChild<ElementRef<HTMLTextAreaElement>>('input');

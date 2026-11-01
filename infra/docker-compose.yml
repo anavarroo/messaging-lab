@@ -43,14 +43,28 @@ services:
       RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
       # Cada cuánto envía el backend un latido por el flujo de eventos de los consumidores
       HEARTBEAT_INTERVAL: ${HEARTBEAT_INTERVAL:-15s}
-      # Modelo de IA del asistente (ver el servicio "ollama"). Dentro de la red de Compose es siempre el puerto 11434.
-      ASSISTANT_URL: http://ollama:11434
-      ASSISTANT_MODEL: ${ASSISTANT_MODEL:-qwen2.5:3b}
+      # Intermediario de Docker para parar y levantar RabbitMQ y el asistente desde «Estado» (ver "docker-proxy")
+      CONTROL_DOCKER_URL: http://docker-proxy:2375
+    networks:
+      - default
+      - control
     # Solo garantiza que el nombre "rabbitmq" exista. No espera a que RabbitMQ esté sano: el backend debe
     # arrancar aunque RabbitMQ tarde, y conectarse cuando esté listo.
     depends_on:
       rabbitmq:
         condition: service_started
+
+  # Intermediario de Docker: lo único que deja hacer es listar contenedores, arrancarlos y pararlos. No publica
+  # ningún puerto y está en una red interna que solo comparte con el backend; el backend nunca ve el socket de
+  # Docker, y además solo actúa sobre RabbitMQ y el asistente de este proyecto.
+  docker-proxy:
+    image: tecnativa/docker-socket-proxy:v0.5.0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      # Sus reglas: solo listar contenedores, arrancarlos y pararlos (ver el propio archivo)
+      - ./docker-proxy/haproxy.cfg.template:/usr/local/etc/haproxy/haproxy.cfg.template:ro
+    networks:
+      - control
 
   frontend:
     build: ../frontend
@@ -62,7 +76,35 @@ services:
     depends_on:
       - backend
 
-  # ---- Asistente de IA (especificación 06) ----
+  # ---- Asistente de IA (especificación 07) ----
+  # Servicio aparte en Python que responde en /api/assistant (nginx se lo envía). Solo lee datos del backend y
+  # habla con el modelo de Ollama. Con OLLAMA_REPLICAS=0 no se levanta; con un Ollama instalado fuera de Docker,
+  # pon OLLAMA_REPLICAS=0, ASSISTANT_REPLICAS=1 y ASSISTANT_OLLAMA_URL=http://host.docker.internal:11434.
+  assistant:
+    build: ../assistant
+    deploy:
+      replicas: ${ASSISTANT_REPLICAS:-${OLLAMA_REPLICAS:-1}}
+    environment:
+      ASSISTANT_OLLAMA_URL: ${ASSISTANT_OLLAMA_URL:-http://ollama:11434}
+      ASSISTANT_BACKEND_URL: http://backend:8080
+      ASSISTANT_MODEL: ${ASSISTANT_MODEL:-qwen2.5:3b}
+      ASSISTANT_EMBEDDING_MODEL: ${ASSISTANT_EMBEDDING_MODEL:-bge-m3}
+      ASSISTANT_CONTEXT_TOKENS: ${ASSISTANT_CONTEXT_TOKENS:-4096}
+      ASSISTANT_MAX_RESPONSE_TOKENS: ${ASSISTANT_MAX_RESPONSE_TOKENS:-700}
+      ASSISTANT_TEMPERATURE: ${ASSISTANT_TEMPERATURE:-0.2}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      # La documentación en la que busca (solo lectura), con las mismas rutas que en el repositorio
+      - ../README.md:/docs/README.md:ro
+      - ../specs:/docs/specs:ro
+      - ../frontend/src/app/features/rabbitmq/guide/guide-content.ts:/docs/frontend/src/app/features/rabbitmq/guide/guide-content.ts:ro
+      # El índice de la documentación: solo se recalcula si la documentación o el modelo cambian
+      - assistant-index:/data/index
+    depends_on:
+      - backend
+
+
   # Modelo de lenguaje local, sin claves y sin que salga ningún dato de tu máquina. Para NO levantarlo (ocupa
   # varios GB de disco y, mientras responde, de memoria), pon OLLAMA_REPLICAS=0 en infra/.env o delante del comando:
   #   OLLAMA_REPLICAS=0 docker compose -f infra/docker-compose.yml up -d --build
@@ -77,9 +119,9 @@ services:
     environment:
       # Descarga el modelo de la memoria tras este tiempo sin preguntas
       OLLAMA_KEEP_ALIVE: ${OLLAMA_KEEP_ALIVE:-5m}
-      # Una sola petición a la vez y un solo modelo cargado: el mínimo de memoria
+      # Una sola petición a la vez, y el modelo de chat y el de embeddings cargados a la vez (unos 3,5 GB)
       OLLAMA_NUM_PARALLEL: "1"
-      OLLAMA_MAX_LOADED_MODELS: "1"
+      OLLAMA_MAX_LOADED_MODELS: "2"
     volumes:
       # Conserva los modelos descargados. "down -v" los elimina.
       - ollama-data:/root/.ollama
@@ -91,7 +133,7 @@ services:
       retries: 12
       start_period: 10s
 
-  # Descarga el modelo la primera vez y termina. Si ya está en el volumen, no hace nada.
+  # Descarga los dos modelos (chat y embeddings) la primera vez y termina. Si ya están en el volumen, no hace nada.
   ollama-model:
     image: ollama/ollama:0.40.13
     deploy:
@@ -102,9 +144,16 @@ services:
     environment:
       OLLAMA_HOST: ollama:11434
       ASSISTANT_MODEL: ${ASSISTANT_MODEL:-qwen2.5:3b}
-    entrypoint: ["sh", "-c", 'ollama list | grep -q "^$$ASSISTANT_MODEL " || ollama pull "$$ASSISTANT_MODEL"']
+      ASSISTANT_EMBEDDING_MODEL: ${ASSISTANT_EMBEDDING_MODEL:-bge-m3}
+    entrypoint: ["sh", "-c", 'for model in "$$ASSISTANT_MODEL" "$$ASSISTANT_EMBEDDING_MODEL"; do ollama list | grep -q "^$$model[ :]" || ollama pull "$$model" || exit 1; done']
     restart: "no"
+
+networks:
+  # Red interna (sin salida) entre el backend y el intermediario de Docker
+  control:
+    internal: true
 
 volumes:
   rabbitmq-data:
   ollama-data:
+  assistant-index:

@@ -59,4 +59,6 @@
   </div>
 
   <button type="button" class="secondary" (click)="check()" [disabled]="checking()">Volver a comprobar</button>
+
+  <app-service-controls service="RABBITMQ" [up]="connection().kind === 'connected'" (recheck)="check()" />
 </section>

@@ -18,8 +18,12 @@ tags:
     description: Bindings entre exchanges y colas de RabbitMQ.
   - name: RabbitMqFlow
     description: Visualizador de flujo de mensajes de RabbitMQ.
-  - name: Assistant
-    description: Asistente de IA local del laboratorio.
+  - name: Lab
+    description: Foto, diagnóstico y actividad del laboratorio, de solo lectura (los usa el servicio del asistente de IA).
+  - name: Control
+    description: >-
+      Parar y levantar RabbitMQ y el asistente de IA. Solo funciona con el Docker Compose del proyecto, a través de
+      un intermediario que solo permite listar, arrancar y parar contenedores.
   - name: RabbitMqQueueMessages
     description: Inspección y vaciado de los mensajes de una cola.
   - name: RabbitMqSessionEvents
@@ -1006,57 +1010,116 @@ paths:
             text/event-stream:
               schema:
                 $ref: '#/components/schemas/FlowEventStream'
-  /api/assistant/status:
+  /api/control/services:
     get:
       tags:
-        - Assistant
-      operationId: getAssistantStatus
-      summary: Estado del modelo del asistente
+        - Control
+      operationId: getControlledServices
+      summary: Servicios que se pueden parar y levantar
       description: >-
-        Indica si el modelo de IA local está listo para responder, si se está preparando (la primera vez se descarga)
-        o si no está disponible, con el motivo en español. Que el asistente no esté disponible no afecta al resto de
-        la aplicación.
+        Indica si el control está disponible (solo con el Docker Compose del proyecto) y, para RabbitMQ y el
+        asistente de IA, si están en marcha, parados o no existen (por ejemplo, el asistente con OLLAMA_REPLICAS=0).
       responses:
         '200':
-          description: Estado del asistente.
+          description: Estado del control y de cada servicio.
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/AssistantStatus'
-  /api/assistant/chat:
+                $ref: '#/components/schemas/ControlStatus'
+  /api/control/services/{service}/actions:
     post:
       tags:
-        - Assistant
-      operationId: chatWithAssistant
-      summary: Pregunta al asistente
+        - Control
+      operationId: actOnService
+      summary: Para o levanta un servicio
       description: >-
-        Responde a una pregunta sobre el laboratorio usando el estado actual de la aplicación. La respuesta llega por
-        un flujo text/event-stream con los eventos token (AssistantToken, un trozo de la respuesta), done (fin) y
-        error (AssistantError, si el modelo falla a mitad de la respuesta). El asistente es de solo lectura. Si el
-        cliente cierra la conexión, la generación se cancela. Solo atiende una pregunta a la vez.
+        Solo admite rabbitmq y assistant (este, junto con su Ollama), y solo sobre los contenedores de este proyecto
+        Compose. Responde cuando Docker ha terminado de arrancar o parar el contenedor; el servicio puede tardar
+        unos segundos más en estar listo.
+      parameters:
+        - name: service
+          in: path
+          required: true
+          description: rabbitmq o assistant.
+          schema:
+            type: string
+            example: rabbitmq
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/AssistantChatRequest'
+              $ref: '#/components/schemas/ControlActionRequest'
       responses:
         '200':
-          description: Respuesta en curso.
+          description: Servicio en su nuevo estado.
           content:
-            text/event-stream:
+            application/json:
               schema:
-                $ref: '#/components/schemas/AssistantEventStream'
+                $ref: '#/components/schemas/ControlledService'
         '400':
           $ref: '#/components/responses/ValidationError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
         '409':
           $ref: '#/components/responses/ConflictError'
         '503':
-          description: El asistente no está disponible o se está preparando.
+          description: El control no está disponible (sin Docker Compose) o Docker ha fallado.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiError'
+  /api/lab/snapshot:
+    get:
+      tags:
+        - Lab
+      operationId: getLabSnapshot
+      summary: Foto del laboratorio
+      description: >-
+        Estado actual del laboratorio, ya resumido: RabbitMQ y su trazado, colas con mensajes, consumidores y ritmos reales,
+        exchanges con sus colas enlazadas, emisores y consumidores simulados, y el límite global. Solo lectura; no incluye
+        cuerpos de mensajes. La usan las herramientas del asistente de IA.
+      responses:
+        '200':
+          description: Foto actual.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabSnapshot'
+  /api/lab/diagnostics:
+    get:
+      tags:
+        - Lab
+      operationId: getLabDiagnostics
+      summary: Problemas detectados en el laboratorio
+      description: >-
+        Conclusiones de las reglas de diagnóstico sobre el estado real (colas que crecen, colas sin consumidor,
+        dead-letter queues con mensajes, emisores fallados, mensajes sin enrutar, trazado desactivado, RabbitMQ caído…),
+        de más a menos graves, cada una como frase completa de causa y solución en español. Solo lectura; no incluye
+        cuerpos de mensajes.
+      responses:
+        '200':
+          description: Diagnóstico actual.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabDiagnostics'
+  /api/lab/activity:
+    get:
+      tags:
+        - Lab
+      operationId: getLabActivity
+      summary: Lo que se mueve ahora en el laboratorio
+      description: >-
+        Si ahora mismo pasan mensajes (emisores y consumidores simulados en marcha, colas con entradas o salidas), con una
+        descripción en español lista para mostrar. Solo lectura.
+      responses:
+        '200':
+          description: Actividad actual.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LabActivity'
 components:
   responses:
     ValidationError:
@@ -1113,7 +1176,7 @@ components:
             - BROKER_UNAVAILABLE
             - TIMEOUT
             - BROKER_REJECTED
-            - ASSISTANT_UNAVAILABLE
+            - CONTROL_UNAVAILABLE
           example: BROKER_UNAVAILABLE
         message:
           type: string
@@ -2045,72 +2108,264 @@ components:
       description: >-
         Flujo de eventos text/event-stream. El generador lo sustituye por SseEmitter (schemaMappings); los
         eventos concretos son status, topology, tick y flow-event.
-    AssistantStatus:
+    LabFinding:
       type: object
-      description: Estado del modelo del asistente.
       required:
+        - severity
+        - topic
+        - text
+      properties:
+        severity:
+          type: string
+          enum:
+            - CRITICAL
+            - WARNING
+            - INFO
+        topic:
+          type: string
+          description: De qué trata (STATE, QUEUES, EXCHANGES, EMITTERS, CONSUMERS, FLOW o TRACE).
+        text:
+          type: string
+          description: Frase completa de causa y, si la hay, de solución, en español.
+    LabDiagnostics:
+      type: object
+      required:
+        - brokerAvailable
+        - findings
+      properties:
+        brokerAvailable:
+          type: boolean
+        findings:
+          type: array
+          description: De más a menos graves; vacía si no hay nada que revisar.
+          items:
+            $ref: '#/components/schemas/LabFinding'
+    LabActivity:
+      type: object
+      required:
+        - active
+        - text
+      properties:
+        active:
+          type: boolean
+          description: Si ahora mismo pasan mensajes.
+        text:
+          type: string
+          description: Descripción en español lista para mostrar.
+    LabSnapshot:
+      type: object
+      required:
+        - time
+        - broker
+        - trace
+        - queues
+        - exchanges
+        - emitters
+        - consumers
+        - load
+      properties:
+        time:
+          type: string
+          format: date-time
+        broker:
+          type: object
+          required:
+            - available
+          properties:
+            available:
+              type: boolean
+            version:
+              type: string
+              nullable: true
+            reason:
+              type: string
+              nullable: true
+        trace:
+          type: object
+          required:
+            - state
+          properties:
+            state:
+              type: string
+              enum:
+                - ACTIVE
+                - DISABLED
+                - UNKNOWN
+            hint:
+              type: string
+              nullable: true
+        queues:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - ready
+              - unacknowledged
+              - consumers
+            properties:
+              name:
+                type: string
+              ready:
+                type: integer
+                format: int64
+              unacknowledged:
+                type: integer
+                format: int64
+              deadLetterQueue:
+                type: string
+                nullable: true
+              consumers:
+                type: integer
+                description: Consumidores leyendo de la cola; -1 si no se sabe.
+              inPerSecond:
+                type: number
+                format: double
+                nullable: true
+                description: Mensajes que entran por segundo; ausente si no se sabe.
+              outPerSecond:
+                type: number
+                format: double
+                nullable: true
+        exchanges:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - type
+              - boundQueues
+            properties:
+              name:
+                type: string
+              type:
+                type: string
+              boundQueues:
+                type: array
+                items:
+                  type: string
+        emitters:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - status
+              - destination
+              - ratePerSecond
+              - published
+              - unrouted
+            properties:
+              name:
+                type: string
+              status:
+                type: string
+              destination:
+                type: string
+              ratePerSecond:
+                type: number
+                format: double
+              published:
+                type: integer
+                format: int64
+              unrouted:
+                type: integer
+                format: int64
+              stopMessage:
+                type: string
+                nullable: true
+        consumers:
+          type: array
+          items:
+            type: object
+            required:
+              - name
+              - queue
+              - status
+              - ratePerSecond
+              - processed
+              - failed
+            properties:
+              name:
+                type: string
+              queue:
+                type: string
+              status:
+                type: string
+              ratePerSecond:
+                type: number
+                format: double
+              processed:
+                type: integer
+                format: int64
+              failed:
+                type: integer
+                format: int64
+              stopMessage:
+                type: string
+                nullable: true
+        load:
+          type: object
+          required:
+            - ratePerSecondInUse
+            - maxRatePerSecond
+            - omittedPerSecond
+          properties:
+            ratePerSecondInUse:
+              type: number
+              format: double
+            maxRatePerSecond:
+              type: integer
+            omittedPerSecond:
+              type: integer
+              format: int64
+    ControlStatus:
+      type: object
+      required:
+        - available
+        - services
+      properties:
+        available:
+          type: boolean
+          description: Si se pueden parar y levantar servicios desde aquí.
+        reason:
+          type: string
+          nullable: true
+          description: Por qué no está disponible, en español, con el comando equivalente.
+        services:
+          type: array
+          description: RabbitMQ y el asistente; vacía si el control no está disponible.
+          items:
+            $ref: '#/components/schemas/ControlledService'
+    ControlledService:
+      type: object
+      required:
+        - service
         - state
       properties:
+        service:
+          type: string
+          enum:
+            - RABBITMQ
+            - ASSISTANT
         state:
           type: string
-          description: READY (puede responder), PREPARING (se está descargando o cargando el modelo) o UNAVAILABLE.
+          description: RUNNING (en marcha), STOPPED (parado) o MISSING (no existe en este proyecto).
           enum:
-            - READY
-            - PREPARING
-            - UNAVAILABLE
+            - RUNNING
+            - STOPPED
+            - MISSING
         message:
           type: string
           nullable: true
-          description: Explicación en español cuando no está listo.
-    AssistantTurn:
+          description: Explicación en español cuando no existe, con el comando para crearlo.
+    ControlActionRequest:
       type: object
-      description: Una intervención anterior de la conversación.
       required:
-        - role
-        - text
+        - action
       properties:
-        role:
+        action:
           type: string
           enum:
-            - USER
-            - ASSISTANT
-        text:
-          type: string
-          maxLength: 2000
-    AssistantChatRequest:
-      type: object
-      required:
-        - question
-      properties:
-        question:
-          type: string
-          minLength: 1
-          maxLength: 500
-          description: La pregunta, de hasta 500 caracteres.
-        history:
-          type: array
-          maxItems: 8
-          description: Las últimas intervenciones de la conversación; el servidor se queda con las que caben en el contexto.
-          items:
-            $ref: '#/components/schemas/AssistantTurn'
-    AssistantToken:
-      type: object
-      description: Un trozo de la respuesta (nombre de evento token).
-      required:
-        - text
-      properties:
-        text:
-          type: string
-    AssistantError:
-      type: object
-      description: El modelo falló a mitad de la respuesta (nombre de evento error).
-      required:
-        - message
-      properties:
-        message:
-          type: string
-    AssistantEventStream:
-      type: string
-      description: >-
-        Flujo de eventos text/event-stream. El generador lo sustituye por SseEmitter (schemaMappings); los eventos
-        concretos son token, done y error.
+            - START
+            - STOP
