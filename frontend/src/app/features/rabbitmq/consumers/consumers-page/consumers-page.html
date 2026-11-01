@@ -1,0 +1,204 @@
+<section class="consumers" aria-labelledby="consumers-title">
+  <h3 id="consumers-title">Consumidores</h3>
+  <p class="intro">
+    Un consumidor recibe los mensajes de una cola. En modo manual decides qué hacer con cada uno: confirmarlo,
+    rechazarlo y devolverlo a la cola, o rechazarlo sin reencolar. Puedes iniciar varios sobre la misma cola para
+    ver cómo RabbitMQ reparte los mensajes. Al salir del laboratorio o cerrar la pestaña, los consumidores se
+    detienen y los mensajes pendientes de confirmar vuelven a la cola.
+    Son consumidores <strong>de sesión</strong>: están ligados a esta sesión del navegador y los controlas tú mensaje a mensaje. Los
+    consumidores que consumen solos, sin que intervengas, son los <strong>simulados</strong> y se crean en el área
+    Generador; siguen funcionando en el servidor aunque cierres la pestaña.
+  </p>
+
+  @if (session.streamError(); as message) {
+    <div class="error stream-error" role="alert">
+      <p>{{ message }}</p>
+      <button type="button" (click)="reconnect()" [disabled]="reconnecting()">
+        {{ reconnecting() ? 'Reconectando…' : 'Reconectar' }}
+      </button>
+      <p class="help">Al reconectar se abre una sesión nueva: los consumidores anteriores no se recuperan.</p>
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="start()" novalidate class="create">
+    <h4>Iniciar un consumidor</h4>
+
+    <div class="field">
+      <label for="consumer-queue">Cola</label>
+      <select
+        id="consumer-queue"
+        formControlName="queue"
+        aria-describedby="consumer-queue-error"
+        [attr.aria-invalid]="submitted() && queueError() ? 'true' : null"
+      >
+        <option value="" disabled>Elige una cola</option>
+        @for (name of queueNames(); track name) {
+          <option [value]="name">{{ name }}</option>
+        }
+      </select>
+      <p id="consumer-queue-error" class="field-error" role="alert">
+        @if (submitted()) {
+          {{ queueError() }}
+        }
+      </p>
+      @if (queueLoadError(); as message) {
+        <p class="field-error" role="alert">{{ message }}</p>
+      }
+      <button type="button" class="secondary small" (click)="loadQueues()">Actualizar las colas</button>
+    </div>
+
+    <fieldset class="field modes">
+      <legend>Modo de confirmación</legend>
+      <label class="radio">
+        <input type="radio" formControlName="ackMode" value="MANUAL" />
+        Manual: tú decides qué hacer con cada mensaje
+      </label>
+      <label class="radio">
+        <input type="radio" formControlName="ackMode" value="AUTOMATIC" />
+        Automático: confirma cada mensaje al recibirlo
+      </label>
+    </fieldset>
+
+    <div class="field">
+      <label for="consumer-name">Nombre del consumidor</label>
+      <input
+        id="consumer-name"
+        type="text"
+        formControlName="name"
+        autocomplete="off"
+        aria-describedby="consumer-name-error"
+        [attr.aria-invalid]="nameError() ? 'true' : null"
+      />
+      <p id="consumer-name-error" class="field-error" role="alert">{{ nameError() }}</p>
+    </div>
+
+    <button type="submit" [disabled]="busy()">Iniciar consumidor</button>
+  </form>
+
+  <div class="feedback" aria-live="polite">
+    @if (notice(); as message) {
+      <p class="notice">{{ message }}</p>
+    }
+  </div>
+  @if (actionError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  <h4>Consumidores de esta sesión</h4>
+  @if (session.consumers().length === 0) {
+    <p class="empty">Todavía no has iniciado ningún consumidor.</p>
+  }
+
+  @for (consumer of session.consumers(); track consumer.info.id) {
+    <article class="consumer" [class.stopped]="!consumer.active" [attr.aria-label]="'Consumidor ' + consumer.info.name">
+      <header class="consumer-header">
+        <div>
+          <h5>{{ consumer.info.name }}</h5>
+          <p class="meta">
+            Cola «{{ consumer.info.queue }}» · {{ modeLabel(consumer.info.ackMode) }} ·
+            @if (consumer.active) {
+              <span class="badge active">Activo</span>
+            } @else {
+              <span class="badge">Detenido</span>
+            }
+          </p>
+        </div>
+        @if (consumer.active) {
+          <button
+            type="button"
+            class="danger"
+            [attr.aria-label]="'Detener el consumidor ' + consumer.info.name"
+            (click)="stop(consumer)"
+          >
+            Detener
+          </button>
+        }
+      </header>
+
+      @if (!consumer.active && consumer.stopMessage) {
+        <p class="stop-message" role="status">{{ consumer.stopMessage }}</p>
+      }
+
+      <div
+        class="log"
+        role="log"
+        [attr.aria-label]="'Mensajes recibidos por ' + consumer.info.name + ', los más recientes primero'"
+      >
+        @if (consumer.messages.length === 0) {
+          <p class="empty">Todavía no ha recibido mensajes.</p>
+        }
+        @for (message of newestFirst(consumer); track message.deliveryTag) {
+          <div class="message">
+            <pre class="body">{{ message.body }}</pre>
+            <dl class="meta-list">
+              <dt>Exchange</dt>
+              <dd>{{ exchangeOf(message) }}</dd>
+              <dt>Routing key</dt>
+              <dd>{{ message.routingKey === '' ? '(vacía)' : message.routingKey }}</dd>
+              @if (message.redelivered) {
+                <dt>Reentrega</dt>
+                <dd><span class="badge warn">Reentregado</span></dd>
+              }
+              @if (message.deathInfo; as death) {
+                <dt>Cola de origen</dt>
+                <dd>{{ death.originQueue }}</dd>
+                <dt>Motivo</dt>
+                <dd>{{ death.reason }}</dd>
+              }
+            </dl>
+
+            @switch (message.state) {
+              @case ('automatic') {
+                <p class="outcome">Confirmado automáticamente al recibirlo.</p>
+              }
+              @case ('resolved') {
+                @if (message.outcome; as outcome) {
+                  <p class="outcome" [class.discarded]="outcome === 'DISCARDED'">{{ outcomeText(outcome) }}</p>
+                }
+              }
+              @default {
+                @if (consumer.active) {
+                  <div class="actions" role="group" aria-label="Qué hacer con este mensaje">
+                    <button
+                      type="button"
+                      [disabled]="message.state === 'resolving'"
+                      (click)="resolve(consumer, message, 'ACK')"
+                    >
+                      Confirmar
+                    </button>
+                    <button
+                      type="button"
+                      class="secondary"
+                      [disabled]="message.state === 'resolving'"
+                      (click)="resolve(consumer, message, 'REQUEUE')"
+                    >
+                      Rechazar y reencolar
+                    </button>
+                    <button
+                      type="button"
+                      class="danger"
+                      [disabled]="message.state === 'resolving'"
+                      (click)="resolve(consumer, message, 'REJECT')"
+                    >
+                      Rechazar sin reencolar
+                    </button>
+                  </div>
+                } @else {
+                  <p class="outcome">
+                    Pendiente de confirmar cuando el consumidor terminó: ha vuelto a la cola.
+                  </p>
+                }
+              }
+            }
+            @if (message.error; as problem) {
+              <p class="error" role="alert">{{ problem }}</p>
+            }
+          </div>
+        }
+      </div>
+      @if (consumer.messages.length >= maxMessages) {
+        <p class="help">Se muestran los últimos {{ maxMessages }} mensajes; los anteriores se descartan de la pantalla.</p>
+      }
+    </article>
+  }
+</section>

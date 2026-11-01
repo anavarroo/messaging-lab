@@ -1,0 +1,64 @@
+<section class="rabbitmq" aria-labelledby="rabbitmq-status-title">
+  <h2 id="rabbitmq-status-title">Estado de RabbitMQ</h2>
+
+  <div class="body" aria-live="polite">
+    @let conn = connection();
+    @let trace = tracing();
+    <dl class="details">
+      <dt>RabbitMQ</dt>
+      @switch (conn.kind) {
+        @case ('checking') {
+          <dd class="checking">Comprobando…</dd>
+        }
+        @case ('connected') {
+          <dd class="ok">Levantado <span class="muted">(versión {{ conn.version }})</span></dd>
+        }
+        @case ('unavailable') {
+          <dd class="bad">No disponible</dd>
+        }
+      }
+
+      <dt>Trazado</dt>
+      @if (conn.kind === 'unavailable') {
+        <dd class="muted">No se puede comprobar sin RabbitMQ.</dd>
+      } @else {
+        @switch (trace.kind) {
+          @case ('checking') {
+            <dd class="checking">Comprobando…</dd>
+          }
+          @case ('known') {
+            @switch (trace.status.state) {
+              @case ('ACTIVE') {
+                <dd class="ok">Activo <span class="muted">(tracing: true)</span></dd>
+              }
+              @case ('DISABLED') {
+                <dd class="warn">Desactivado <span class="muted">(tracing: false)</span></dd>
+              }
+              @case ('UNAVAILABLE') {
+                <dd class="muted">No se puede comprobar: RabbitMQ no está disponible.</dd>
+              }
+            }
+          }
+          @case ('unknown') {
+            <dd class="muted">No se ha podido comprobar.</dd>
+          }
+        }
+      }
+
+    </dl>
+
+    @if (conn.kind === 'unavailable') {
+      <p class="error" role="alert">{{ conn.message }}</p>
+    } @else if (tracing().kind === 'unknown') {
+      <p class="error" role="alert">{{ $any(tracing()).message }}</p>
+    } @else if (trace.kind === 'known' && trace.status.state === 'DISABLED') {
+      <p class="warning" role="status">{{ trace.status.hint }}</p>
+    } @else if (trace.kind === 'known' && trace.status.state === 'ACTIVE') {
+      <p class="help">La pestaña «Flujo» del Laboratorio RabbitMQ puede mostrar los mensajes en tiempo real.</p>
+    }
+  </div>
+
+  <button type="button" class="secondary" (click)="check()" [disabled]="checking()">Volver a comprobar</button>
+
+  <app-service-controls service="RABBITMQ" [up]="connection().kind === 'connected'" (recheck)="check()" />
+</section>

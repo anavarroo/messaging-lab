@@ -1,0 +1,72 @@
+<section class="panel" [attr.aria-labelledby]="'inspect-title'">
+  <div class="list-header">
+    <h4 id="inspect-title">Mensajes de la cola «{{ queue() }}»</h4>
+    <div class="buttons">
+      <button type="button" class="secondary" (click)="refresh()" [disabled]="loading()">Volver a leer</button>
+      <button type="button" class="secondary" (click)="closed.emit()">Cerrar</button>
+    </div>
+  </div>
+
+  <p class="help warning">
+    La inspección no retira los mensajes de la cola ni los confirma, pero RabbitMQ no ofrece una lectura sin
+    efecto: puede dejarlos marcados como reentregados. No se muestran los mensajes pendientes de confirmar por un
+    consumidor.
+  </p>
+
+  <label class="auto-refresh">
+    <input type="checkbox" [checked]="autoRefresh()" (change)="toggleAutoRefresh($any($event.target).checked)" />
+    Actualizar los mensajes automáticamente cada pocos segundos
+  </label>
+
+  @if (error(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  @if (loading() && !inspection()) {
+    <p class="loading">Leyendo los mensajes de la cola…</p>
+  }
+
+  @if (inspection(); as current) {
+    <div aria-live="polite">
+      @if (current.messages.length === 0) {
+        <p class="empty">La cola no tiene mensajes listos.</p>
+      } @else {
+        @if (current.truncated) {
+          <p class="notice">
+            Solo se muestran los primeros {{ current.messages.length }} de {{ current.total }} mensajes listos.
+          </p>
+        } @else {
+          <p class="help">
+            {{ current.total === 1 ? '1 mensaje listo' : current.total + ' mensajes listos' }}.
+          </p>
+        }
+      }
+    </div>
+
+    @if (current.messages.length > 0) {
+      <ol class="messages">
+        @for (message of current.messages; track $index) {
+          <li>
+            <pre class="body">{{ message.body }}</pre>
+            <dl class="meta">
+              <dt>Exchange</dt>
+              <dd>{{ exchangeOf(message) }}</dd>
+              <dt>Routing key</dt>
+              <dd>{{ message.routingKey === '' ? '(vacía)' : message.routingKey }}</dd>
+              @if (message.redelivered) {
+                <dt>Reentrega</dt>
+                <dd><span class="badge">Reentregado</span></dd>
+              }
+              @if (message.deathInfo; as death) {
+                <dt>Cola de origen</dt>
+                <dd>{{ death.originQueue }}</dd>
+                <dt>Motivo</dt>
+                <dd>{{ death.reason }}</dd>
+              }
+            </dl>
+          </li>
+        }
+      </ol>
+    }
+  }
+</section>

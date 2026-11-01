@@ -1,0 +1,42 @@
+<header class="header">
+  <h1>messaging-lab</h1>
+  <app-assistant-widget />
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav aria-label="Secciones del laboratorio">
+      <ul>
+        @for (section of sections; track section.label) {
+          <li>
+            @if (section.enabled) {
+              <a [routerLink]="section.path" routerLinkActive="active" ariaCurrentWhenActive="page">
+                {{ section.label }}
+              </a>
+            } @else {
+              <button
+                type="button"
+                class="disabled-section"
+                aria-disabled="true"
+                (click)="showComingSoon(section)"
+              >
+                <span class="label">{{ section.label }}</span>
+                <span class="description">{{ section.description }}</span>
+              </button>
+            }
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <div class="notice" role="status">
+      @if (notice(); as message) {
+        {{ message }}
+      }
+    </div>
+  </aside>
+
+  <main class="content">
+    <router-outlet />
+  </main>
+</div>

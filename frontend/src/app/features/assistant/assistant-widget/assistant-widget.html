@@ -1,0 +1,89 @@
+<button
+  #toggleButton
+  type="button"
+  class="toggle"
+  [class.ready]="chat.ready()"
+  [attr.aria-expanded]="open()"
+  aria-controls="assistant-panel"
+  [attr.aria-label]="(open() ? 'Cerrar el asistente' : 'Abrir el asistente') + '. ' + statusLabel()"
+  [title]="statusLabel()"
+  (click)="toggle()"
+>
+  <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+    <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.2 3.6A.5.5 0 0 1 5 19.2V16h0A1.5 1.5 0 0 1 4 14.6Z" />
+    <circle cx="8.5" cy="9.6" r="1.1" class="dot" />
+    <circle cx="12" cy="9.6" r="1.1" class="dot" />
+    <circle cx="15.5" cy="9.6" r="1.1" class="dot" />
+  </svg>
+  <span class="indicator" aria-hidden="true"></span>
+</button>
+
+@if (open()) {
+  <section id="assistant-panel" class="panel" role="dialog" aria-modal="false" aria-labelledby="assistant-title">
+    <header class="panel-header">
+      <h2 id="assistant-title">Asistente</h2>
+      <div class="actions">
+        <button type="button" class="link" [disabled]="chat.messages().length === 0" (click)="chat.reset()">
+          Nueva conversación
+        </button>
+        <button type="button" class="close" aria-label="Cerrar el asistente" (click)="close()">×</button>
+      </div>
+    </header>
+
+    @if (chat.status(); as status) {
+      @if (status.state !== 'READY') {
+        <p class="notice" role="status">
+          {{ status.message || (status.state === 'PREPARING' ? 'El asistente se está preparando.' : 'El asistente no está disponible.') }}
+        </p>
+      }
+    } @else {
+      <p class="notice muted" role="status">Comprobando el asistente…</p>
+    }
+
+    <div #list class="messages" aria-live="polite">
+      @if (chat.messages().length === 0) {
+        <p class="hint">
+          Pregúntame por el laboratorio: qué es cada pieza, por qué crece una cola, si el trazado está activo… Solo leo: no
+          cambio nada.
+        </p>
+      }
+      @for (message of chat.messages(); track $index) {
+        <div class="message" [class.user]="message.role === 'USER'" [class.assistant]="message.role === 'ASSISTANT'">
+          <span class="visually-hidden">{{ message.role === 'USER' ? 'Tú:' : 'Asistente:' }}</span>
+          @if (message.text) {
+            <!-- en una sola línea: el texto conserva los espacios (pre-wrap) y la sangría se vería -->
+            <p class="text">@for (segment of format(message.text); track $index) {@switch (segment.format) {@case ('bold') {<strong>{{ segment.text }}</strong>} @case ('italic') {<em>{{ segment.text }}</em>} @case ('code') {<code>{{ segment.text }}</code>} @default {{{ segment.text }}}}}</p>
+          } @else if (!message.error && !message.cancelled) {
+            <p class="text typing">Pensando…</p>
+          }
+          @if (message.cancelled) {
+            <p class="meta">Respuesta cancelada.</p>
+          }
+          @if (message.error) {
+            <p class="meta error" role="alert">{{ message.error }}</p>
+          }
+        </div>
+      }
+    </div>
+
+    <form class="composer" (submit)="$event.preventDefault(); send()">
+      <label for="assistant-question" class="visually-hidden">Tu pregunta</label>
+      <textarea
+        #input
+        id="assistant-question"
+        rows="2"
+        [attr.maxlength]="max"
+        placeholder="Escribe tu pregunta…"
+        [value]="question()"
+        [disabled]="!chat.ready()"
+        (input)="question.set($any($event.target).value)"
+        (keydown)="onKey($event)"
+      ></textarea>
+      @if (chat.answering()) {
+        <button type="button" class="secondary" (click)="chat.cancel()">Cancelar</button>
+      } @else {
+        <button type="submit" [disabled]="!chat.ready() || !question().trim()">Enviar</button>
+      }
+    </form>
+  </section>
+}

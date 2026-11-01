@@ -1,0 +1,21 @@
+.selection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.selection label {
+  font-weight: 400;
+}
+
+h4 {
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+h4 {
+  margin: var(--space-6) 0 var(--space-3);
+}

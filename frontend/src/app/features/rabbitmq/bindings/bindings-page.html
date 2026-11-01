@@ -1,0 +1,181 @@
+<section class="bindings" aria-labelledby="bindings-title">
+  <h3 id="bindings-title">Bindings</h3>
+  <p class="intro">
+    Un binding enlaza un exchange con una cola. Decide qué mensajes llegan a la cola según su routing key y el
+    tipo del exchange.
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="create()" novalidate class="create">
+    <h4>Crear un binding</h4>
+
+    <div class="field">
+      <label for="binding-exchange">Exchange</label>
+      <select
+        id="binding-exchange"
+        formControlName="exchange"
+        aria-describedby="binding-exchange-help binding-exchange-error"
+        [attr.aria-invalid]="exchangeError() ? 'true' : null"
+      >
+        <option value="">Elige un exchange</option>
+        @for (exchange of bindableExchanges(); track exchange.name) {
+          <option [value]="exchange.name">{{ exchange.name }} ({{ typeLabels[exchange.type] }})</option>
+        }
+      </select>
+      <p id="binding-exchange-help" class="help">
+        El exchange por defecto no aparece: RabbitMQ lo enlaza automáticamente con cada cola.
+      </p>
+      <p id="binding-exchange-error" class="field-error" role="alert">{{ exchangeError() }}</p>
+    </div>
+
+    <div class="field">
+      <label for="binding-queue">Cola</label>
+      <select
+        id="binding-queue"
+        formControlName="queue"
+        aria-describedby="binding-queue-error"
+        [attr.aria-invalid]="queueError() ? 'true' : null"
+      >
+        <option value="">Elige una cola</option>
+        @for (queue of queues() ?? []; track queue.name) {
+          <option [value]="queue.name">{{ queue.name }}</option>
+        }
+      </select>
+      <p id="binding-queue-error" class="field-error" role="alert">{{ queueError() }}</p>
+    </div>
+
+    @switch (selectedType()) {
+      @case ('FANOUT') {
+        <p class="help fanout" id="binding-fanout-help">
+          Un exchange fanout difunde cada mensaje a todas sus colas: no necesita routing key.
+        </p>
+      }
+      @case ('TOPIC') {
+        <div class="field">
+          <label for="binding-key">Patrón</label>
+          <input
+            id="binding-key"
+            type="text"
+            formControlName="routingKey"
+            autocomplete="off"
+            aria-describedby="binding-key-help binding-key-error"
+            [attr.aria-invalid]="routingKeyError() && showRoutingKeyError() ? 'true' : null"
+          />
+          <p id="binding-key-help" class="help">
+            Palabras separadas por puntos. «*» sustituye exactamente una palabra y «#» sustituye cero o más
+            palabras. Por ejemplo, «pedido.*» recibe «pedido.creado» pero no «pedido.creado.hoy», y «pedido.#»
+            recibe las dos. Vacío es válido.
+          </p>
+          <p id="binding-key-error" class="field-error" role="alert">
+            @if (showRoutingKeyError()) {
+              {{ routingKeyError() }}
+            }
+          </p>
+        </div>
+      }
+      @case ('DIRECT') {
+        <div class="field">
+          <label for="binding-key">Routing key</label>
+          <input
+            id="binding-key"
+            type="text"
+            formControlName="routingKey"
+            autocomplete="off"
+            aria-describedby="binding-key-help binding-key-error"
+            [attr.aria-invalid]="routingKeyError() && showRoutingKeyError() ? 'true' : null"
+          />
+          <p id="binding-key-help" class="help">
+            El mensaje llega a la cola si su routing key coincide exactamente con esta. Puede dejarse vacía.
+          </p>
+          <p id="binding-key-error" class="field-error" role="alert">
+            @if (showRoutingKeyError()) {
+              {{ routingKeyError() }}
+            }
+          </p>
+        </div>
+      }
+    }
+
+    <button type="submit" [disabled]="busy()">Crear binding</button>
+  </form>
+
+  <div class="feedback" aria-live="polite">
+    @if (notice(); as message) {
+      <p class="notice">{{ message }}</p>
+    }
+  </div>
+  @if (actionError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  <div class="list-header">
+    <h4>Bindings existentes</h4>
+    <button type="button" class="secondary" (click)="reload()" [disabled]="loading()">Actualizar</button>
+  </div>
+
+  <form [formGroup]="filters" class="filters" aria-label="Filtros del listado">
+    <div class="field">
+      <label for="filter-exchange">Filtrar por exchange</label>
+      <select id="filter-exchange" formControlName="exchange">
+        <option value="">Todos</option>
+        @for (exchange of bindableExchanges(); track exchange.name) {
+          <option [value]="exchange.name">{{ exchange.name }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="filter-queue">Filtrar por cola</label>
+      <select id="filter-queue" formControlName="queue">
+        <option value="">Todas</option>
+        @for (queue of queues() ?? []; track queue.name) {
+          <option [value]="queue.name">{{ queue.name }}</option>
+        }
+      </select>
+    </div>
+  </form>
+
+  @if (loadError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  @if (bindings(); as list) {
+    @if (list.length === 0) {
+      <p class="empty">No hay bindings{{ filters.getRawValue().exchange || filters.getRawValue().queue ? ' con ese filtro' : '' }}.</p>
+    } @else {
+      <table>
+        <caption class="visually-hidden">
+          Bindings entre exchanges y colas
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Exchange de origen</th>
+            <th scope="col">Cola de destino</th>
+            <th scope="col">Routing key o patrón</th>
+            <th scope="col"><span class="visually-hidden">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (binding of list; track binding.exchange + '\u0000' + binding.queue + '\u0000' + binding.routingKey) {
+            <tr>
+              <td class="name">{{ binding.exchange }}</td>
+              <td class="name">{{ binding.queue }}</td>
+              <td class="name key">{{ displayKey(binding) }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="danger"
+                  [disabled]="busy()"
+                  [attr.aria-label]="'Eliminar el binding de ' + binding.exchange + ' a ' + binding.queue + ' con routing key ' + displayKey(binding)"
+                  (click)="remove(binding)"
+                >
+                  Eliminar
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  } @else if (loading()) {
+    <p class="loading">Cargando los bindings…</p>
+  }
+</section>

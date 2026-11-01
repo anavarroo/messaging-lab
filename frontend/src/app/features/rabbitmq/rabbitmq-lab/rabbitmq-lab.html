@@ -1,0 +1,53 @@
+@let state = connection.state();
+
+<section class="lab" aria-labelledby="lab-title">
+  <h2 id="lab-title">Laboratorio RabbitMQ</h2>
+
+  <div class="connection" aria-live="polite">
+    @if (state.kind === 'loading') {
+      <p class="loading">Comprobando la conexión con RabbitMQ…</p>
+    } @else if (state.kind === 'connected') {
+      <p class="connected">Conectado <span class="version">(RabbitMQ {{ state.version }})</span></p>
+    } @else {
+      <p class="error" role="alert">{{ state.message }}</p>
+    }
+  </div>
+
+  @if (state.kind === 'unavailable' || (state.kind === 'loading' && state.retrying)) {
+    <button type="button" class="retry" (click)="connection.retry()" [disabled]="state.kind === 'loading'">
+      Reintentar
+    </button>
+  }
+
+  <nav class="tabs" aria-label="Áreas del laboratorio RabbitMQ">
+    <ul>
+      @for (area of areas; track area.path) {
+        <li>
+          @if (connection.operationsEnabled() || area.worksOffline) {
+            <a [routerLink]="area.path" routerLinkActive="active" ariaCurrentWhenActive="page">
+              {{ area.label }}
+            </a>
+          } @else {
+            <!-- sin href ni routerLink: no navega, pero se puede enfocar y leer como deshabilitada -->
+            <a class="disabled" role="link" tabindex="0" aria-disabled="true">{{ area.label }}</a>
+          }
+        </li>
+      }
+    </ul>
+  </nav>
+
+  @if (state.kind !== 'connected') {
+    <p class="disabled-note">
+      Las operaciones del laboratorio están deshabilitadas mientras no haya conexión con RabbitMQ. La guía se
+      puede leer igualmente.
+    </p>
+  }
+
+  @if (connection.hasConnected() || onGuide()) {
+    <fieldset class="area" [disabled]="!connection.operationsEnabled() && !onGuide()">
+      <router-outlet />
+    </fieldset>
+  }
+
+  <app-confirm-dialog />
+</section>

@@ -1,0 +1,33 @@
+<section class="rabbitmq" aria-labelledby="assistant-status-title">
+  <h2 id="assistant-status-title">Asistente de IA</h2>
+
+  <div class="body" aria-live="polite">
+    @let status = chat.status();
+    <dl class="details">
+      <dt>Modelo</dt>
+      @switch (status?.state) {
+        @case ('READY') {
+          <dd class="ok">Listo</dd>
+        }
+        @case ('PREPARING') {
+          <dd class="warn">Preparándose</dd>
+        }
+        @case ('UNAVAILABLE') {
+          <dd class="bad">No disponible</dd>
+        }
+        @default {
+          <dd class="checking">Comprobando…</dd>
+        }
+      }
+    </dl>
+    @if (status && status.state !== 'READY' && status.message) {
+      <p class="warning model-message" role="status">{{ status.message }}</p>
+    } @else if (status?.state === 'READY') {
+      <p class="help">Puedes preguntarle desde el icono de chat de la cabecera.</p>
+    }
+  </div>
+
+  <button type="button" (click)="chat.refreshStatus()">Volver a comprobar</button>
+
+  <app-service-controls service="ASSISTANT" [up]="chat.status()?.state === 'READY'" (recheck)="chat.refreshStatus()" />
+</section>

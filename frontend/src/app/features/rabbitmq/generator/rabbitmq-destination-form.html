@@ -1,0 +1,36 @@
+<fieldset class="destination" [formGroup]="form">
+  <legend>Destino</legend>
+  <div class="modes">
+    <label><input type="radio" formControlName="type" value="EXCHANGE" /> A un exchange</label>
+    <label><input type="radio" formControlName="type" value="QUEUE" /> Directamente a una cola</label>
+  </div>
+
+  @if (typeValue() === 'EXCHANGE') {
+    <div class="field">
+      <label for="destination-exchange">Exchange</label>
+      <select id="destination-exchange" formControlName="exchange" aria-describedby="destination-error"
+        [attr.aria-invalid]="attempted() && error() ? 'true' : null">
+        <option value="">Elige un exchange…</option>
+        @for (exchange of exchanges(); track exchange.name) {
+          <option [value]="exchange.name">{{ exchange.name || '(exchange por defecto)' }}</option>
+        }
+      </select>
+    </div>
+    <div class="field">
+      <label for="destination-routing-key">Routing key</label>
+      <input id="destination-routing-key" type="text" formControlName="routingKey" autocomplete="off" />
+    </div>
+  } @else {
+    <div class="field">
+      <label for="destination-queue">Cola</label>
+      <select id="destination-queue" formControlName="queue" aria-describedby="destination-error"
+        [attr.aria-invalid]="attempted() && error() ? 'true' : null">
+        <option value="">Elige una cola…</option>
+        @for (queue of queues(); track queue.name) {
+          <option [value]="queue.name">{{ queue.name }}</option>
+        }
+      </select>
+    </div>
+  }
+  <p id="destination-error" class="field-error" role="alert">@if (attempted()) { {{ error() }} }</p>
+</fieldset>

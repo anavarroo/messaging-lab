@@ -1,0 +1,31 @@
+@let current = state();
+
+<section class="status" aria-labelledby="status-title">
+  <h2 id="status-title">Estado del backend</h2>
+
+  <div class="status-body" aria-live="polite">
+    @if (current.kind === 'loading') {
+      <p class="loading">Consultando el estado del backend…</p>
+    } @else if (current.kind === 'success') {
+      <dl class="details">
+        <dt>Estado</dt>
+        <dd class="available">Disponible</dd>
+        <dt>Aplicación</dt>
+        <dd>{{ current.data.name }}</dd>
+        <dt>Versión</dt>
+        <dd>{{ current.data.version }}</dd>
+      </dl>
+    } @else {
+      <p class="error" role="alert">{{ current.message }}</p>
+    }
+  </div>
+
+  @if (current.kind === 'error' || (current.kind === 'loading' && current.retrying)) {
+    <button type="button" (click)="retry()" [disabled]="current.kind === 'loading'">
+      Reintentar
+    </button>
+  }
+</section>
+
+<app-rabbitmq-status />
+<app-assistant-status />

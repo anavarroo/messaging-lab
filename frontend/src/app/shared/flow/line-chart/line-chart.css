@@ -1,0 +1,99 @@
+:host {
+  display: block;
+  /* una paleta que se distingue en tema claro y en oscuro; además cada serie lleva su propio trazo */
+  --series-0: var(--primary);
+  --series-1: #c2410c;
+  --series-2: var(--success);
+  --series-3: #7e22ce;
+  --series-4: #a16207;
+  --axis: #8a8f98;
+  --text: var(--text);
+}
+
+.chart {
+  margin: 0 0 1rem;
+}
+
+figcaption {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+figure > svg {
+  display: block;
+  width: 100%;
+  max-width: 44rem;
+  height: auto;
+}
+
+.legend svg {
+  flex: none;
+}
+
+.axis {
+  stroke: var(--axis);
+  stroke-width: 1;
+}
+
+.tick,
+.unit {
+  fill: var(--text);
+  font-size: 11px;
+}
+
+.line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.series-0 { stroke: var(--series-0); }
+.series-1 { stroke: var(--series-1); }
+.series-2 { stroke: var(--series-2); }
+.series-3 { stroke: var(--series-3); }
+.series-4 { stroke: var(--series-4); }
+
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0.25rem 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.85rem;
+}
+
+table {
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+th,
+td {
+  padding: 0.15rem 0.6rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.number {
+  text-align: right;
+}
+
+.empty {
+  margin: 0.25rem 0;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}

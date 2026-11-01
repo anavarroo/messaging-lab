@@ -1,0 +1,21 @@
+<dialog #dialog aria-labelledby="confirm-title" aria-describedby="confirm-message" (close)="closed()">
+  @if (request(); as current) {
+    <h2 id="confirm-title">{{ current.title }}</h2>
+    <p id="confirm-message">{{ current.message }}</p>
+    @if (current.items?.length) {
+      <ul class="items">
+        @for (item of current.items; track item) {
+          <li>{{ item }}</li>
+        }
+      </ul>
+    }
+    <div class="actions">
+      <button type="button" class="secondary" autofocus (click)="cancel()">
+        {{ current.cancelLabel ?? 'Cancelar' }}
+      </button>
+      <button type="button" class="danger" (click)="confirm()">
+        {{ current.confirmLabel ?? 'Confirmar' }}
+      </button>
+    </div>
+  }
+</dialog>

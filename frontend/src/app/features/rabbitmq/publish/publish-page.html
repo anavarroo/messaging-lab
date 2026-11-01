@@ -1,0 +1,104 @@
+<section class="publish" aria-labelledby="publish-title">
+  <h3 id="publish-title">Publicación</h3>
+  <p class="intro">
+    Publica un mensaje de texto en un exchange. RabbitMQ lo acepta siempre, pero solo llega a una cola si algún
+    binding coincide con la routing key.
+  </p>
+
+  @if (loadError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="publish()" novalidate class="create">
+    <div class="field">
+      <label for="publish-exchange">Exchange</label>
+      <select
+        id="publish-exchange"
+        formControlName="exchange"
+        aria-describedby="publish-exchange-error"
+        [attr.aria-invalid]="submitted() && exchangeError() ? 'true' : null"
+      >
+        <option [value]="noExchange" disabled>Elige un exchange</option>
+        @for (exchange of exchanges() ?? []; track exchange.name) {
+          <option [value]="exchange.name">{{ displayName(exchange) }} ({{ typeLabels[exchange.type] }})</option>
+        }
+      </select>
+      <p id="publish-exchange-error" class="field-error" role="alert">
+        @if (submitted()) {
+          {{ exchangeError() }}
+        }
+      </p>
+    </div>
+
+    @if (selectedExchange() && usesRoutingKey()) {
+      <div class="field">
+        <label for="publish-key">
+          {{ isDefaultExchange() ? 'Cola de destino (routing key)' : 'Routing key' }}
+        </label>
+        <input
+          id="publish-key"
+          type="text"
+          formControlName="routingKey"
+          autocomplete="off"
+          list="publish-queues"
+          aria-describedby="publish-key-help publish-key-error"
+          [attr.aria-invalid]="routingKeyError() ? 'true' : null"
+        />
+        <datalist id="publish-queues">
+          @if (isDefaultExchange()) {
+            @for (name of queueNames(); track name) {
+              <option [value]="name"></option>
+            }
+          }
+        </datalist>
+        <p id="publish-key-help" class="help">
+          @if (isDefaultExchange()) {
+            El exchange por defecto entrega el mensaje directamente a la cola cuyo nombre es esta routing key.
+          } @else {
+            Se compara con los bindings del exchange. Puede dejarse vacía.
+          }
+        </p>
+        <p id="publish-key-error" class="field-error" role="alert">{{ routingKeyError() }}</p>
+      </div>
+    } @else if (selectedExchange()) {
+      <p class="help fanout">
+        Un exchange fanout difunde el mensaje a todas sus colas: no usa routing key.
+      </p>
+    }
+
+    <div class="field wide">
+      <label for="publish-body">Cuerpo del mensaje</label>
+      <textarea
+        id="publish-body"
+        formControlName="body"
+        rows="6"
+        aria-describedby="publish-body-size publish-body-error"
+        [attr.aria-invalid]="submitted() && bodyError() ? 'true' : null"
+      ></textarea>
+      <p id="publish-body-size" class="help">{{ bodyBytes() }} de {{ maxBytes }} bytes (UTF-8).</p>
+      <p id="publish-body-error" class="field-error" role="alert">
+        @if (submitted() || bodyBytes() > maxBytes) {
+          {{ bodyError() }}
+        }
+      </p>
+    </div>
+
+    <button type="submit" [disabled]="busy()">{{ busy() ? 'Publicando…' : 'Publicar' }}</button>
+  </form>
+
+  <div class="result" aria-live="polite">
+    @if (outcome(); as result) {
+      @if (result.routed) {
+        <p class="notice">El mensaje se ha publicado y se ha enrutado al menos a una cola.</p>
+      } @else {
+        <p class="warning">
+          El mensaje se ha publicado, pero no se ha podido enrutar a ninguna cola y se ha descartado: ningún
+          binding coincide con la routing key.
+        </p>
+      }
+    }
+  </div>
+  @if (actionError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+</section>

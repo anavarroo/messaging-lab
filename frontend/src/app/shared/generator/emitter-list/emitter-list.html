@@ -1,0 +1,58 @@
+<ul class="emitters">
+  @for (emitter of emitters(); track emitter.id) {
+    <li class="emitter" [class]="'status-' + emitter.status.toLowerCase()" [attr.aria-label]="'Emisor ' + emitter.name">
+      <div class="head">
+        <div>
+          <h5>{{ emitter.name }}</h5>
+          <p class="where">{{ destinationLabel()(emitter) }} · {{ intervalText(emitter.interval) }}</p>
+        </div>
+        <span class="badge" [class]="'badge status-' + emitter.status.toLowerCase()">{{ statusLabels[emitter.status] }}</span>
+      </div>
+
+      <dl class="counters">
+        <dt>Publicados</dt>
+        <dd>{{ emitter.published }}</dd>
+        <dt>Sin enrutar</dt>
+        <dd>{{ emitter.unrouted }}</dd>
+        <dt>Ritmo real</dt>
+        <dd>{{ rate(emitter) }} por segundo</dd>
+      </dl>
+
+      @if (emitter.stopMessage; as message) {
+        <p class="stop-message" role="status">{{ message }}</p>
+      }
+
+      <div class="actions" role="group" [attr.aria-label]="'Controles de ' + emitter.name">
+        @if (canStart(emitter)) {
+          <button type="button" [disabled]="isBusy(emitter)" (click)="requested.emit({ emitter, action: 'START' })">
+            Iniciar
+          </button>
+        }
+        @if (emitter.status === 'RUNNING') {
+          <button type="button" class="secondary" [disabled]="isBusy(emitter)" (click)="requested.emit({ emitter, action: 'PAUSE' })">
+            Pausar
+          </button>
+        }
+        @if (emitter.status === 'PAUSED') {
+          <button type="button" [disabled]="isBusy(emitter)" (click)="requested.emit({ emitter, action: 'RESUME' })">
+            Reanudar
+          </button>
+        }
+        @if (emitter.status === 'RUNNING' || emitter.status === 'PAUSED') {
+          <button type="button" class="secondary" [disabled]="isBusy(emitter)" (click)="requested.emit({ emitter, action: 'STOP' })">
+            Parar
+          </button>
+        }
+        <button
+          type="button"
+          class="danger"
+          [disabled]="isBusy(emitter)"
+          [attr.aria-label]="'Eliminar el emisor ' + emitter.name"
+          (click)="removed.emit(emitter)"
+        >
+          Eliminar
+        </button>
+      </div>
+    </li>
+  }
+</ul>

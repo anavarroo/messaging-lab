@@ -1,0 +1,29 @@
+.publish {
+  max-width: 66rem;
+}
+
+.field.wide {
+  max-width: none;
+}
+
+textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+.fanout {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-hover);
+}
+
+.warning {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid var(--focus);
+  background: #fff8e1;
+  color: #5c4300;
+  font-weight: 600;
+}

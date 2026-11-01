@@ -1,0 +1,107 @@
+<section class="exchanges" aria-labelledby="exchanges-title">
+  <h3 id="exchanges-title">Exchanges</h3>
+  <p class="intro">
+    Un exchange recibe los mensajes publicados y los reparte a las colas según sus bindings y su tipo.
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="create()" novalidate class="create">
+    <h4>Crear un exchange</h4>
+
+    <div class="field">
+      <label for="exchange-name">Nombre</label>
+      <input
+        id="exchange-name"
+        type="text"
+        formControlName="name"
+        autocomplete="off"
+        [attr.aria-invalid]="nameError() && (form.controls.name.touched || submitted()) ? 'true' : null"
+        aria-describedby="exchange-name-error"
+      />
+      <p id="exchange-name-error" class="field-error" role="alert">
+        @if (nameError(); as message) {
+          @if (form.controls.name.touched || submitted()) {
+            {{ message }}
+          }
+        }
+      </p>
+    </div>
+
+    <div class="field">
+      <label for="exchange-type">Tipo</label>
+      <select id="exchange-type" formControlName="type" aria-describedby="exchange-type-help">
+        @for (type of types; track type.value) {
+          <option [value]="type.value">{{ type.label }}</option>
+        }
+      </select>
+      <p id="exchange-type-help" class="help">{{ selectedHelp() }}</p>
+    </div>
+
+    <button type="submit" [disabled]="busy()">Crear exchange</button>
+  </form>
+
+  <div class="feedback" aria-live="polite">
+    @if (notice(); as message) {
+      <p class="notice">{{ message }}</p>
+    }
+  </div>
+  @if (actionError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  <div class="list-header">
+    <h4>Exchanges existentes</h4>
+    <button type="button" class="secondary" (click)="reload()" [disabled]="loading()">Actualizar</button>
+  </div>
+
+  @if (loadError(); as message) {
+    <p class="error" role="alert">{{ message }}</p>
+  }
+
+  @if (exchanges(); as list) {
+    <table>
+      <caption class="visually-hidden">
+        Exchanges existentes en RabbitMQ
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Nombre</th>
+          <th scope="col">Tipo</th>
+          <th scope="col">Origen</th>
+          <th scope="col"><span class="visually-hidden">Acciones</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (exchange of list; track exchange.name) {
+          <tr>
+            <td class="name">{{ displayName(exchange) }}</td>
+            <td>{{ typeLabels[exchange.type] }}</td>
+            <td>
+              @if (exchange.predefined) {
+                <span class="badge">Predefinido</span>
+              } @else {
+                Creado por ti
+              }
+            </td>
+            <td>
+              @if (!exchange.predefined) {
+                <button
+                  type="button"
+                  class="danger"
+                  [disabled]="busy()"
+                  [attr.aria-label]="'Eliminar el exchange ' + exchange.name"
+                  (click)="remove(exchange)"
+                >
+                  Eliminar
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else if (loading()) {
+    <p class="loading">Cargando los exchanges…</p>
+  }
+
+  <app-confirm-dialog />
+</section>

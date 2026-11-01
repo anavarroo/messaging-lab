@@ -1,0 +1,662 @@
+{
+  "_comment": "Banco de la evaluación (especificación 07, RF-5). Cada pregunta: el escenario (evaluation/lab.py), los grupos de frases que la respuesta debe contener (en cada grupo, basta una alternativa) y las que no debe contener. Se compara sin tildes ni mayúsculas.",
+  "questions": [
+    {
+      "id": "concepto-exchange",
+      "scenario": "clean",
+      "kind": "concepto",
+      "question": "¿Qué es un exchange?",
+      "must": [
+        [
+          "exchange"
+        ],
+        [
+          "cola"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    },
+    {
+      "id": "concepto-direct-fanout",
+      "scenario": "clean",
+      "kind": "concepto",
+      "question": "¿Qué diferencia hay entre un exchange direct y uno fanout?",
+      "must": [
+        [
+          "direct"
+        ],
+        [
+          "fanout"
+        ],
+        [
+          "todas",
+          "todos"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    },
+    {
+      "id": "concepto-dlq",
+      "scenario": "clean",
+      "kind": "concepto",
+      "question": "¿Qué es una dead-letter queue?",
+      "must": [
+        [
+          "rechaz"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    },
+    {
+      "id": "concepto-routing-key",
+      "scenario": "clean",
+      "kind": "concepto",
+      "question": "¿Para qué sirve la routing key?",
+      "must": [
+        [
+          "exchange",
+          "binding"
+        ],
+        [
+          "etiqueta",
+          "decid",
+          "cola"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    },
+    {
+      "id": "concepto-pendiente",
+      "scenario": "clean",
+      "kind": "concepto",
+      "question": "¿Qué significa que un mensaje esté pendiente de confirmar?",
+      "must": [
+        [
+          "consumidor"
+        ],
+        [
+          "confirm"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    },
+    {
+      "id": "concepto-almohadilla",
+      "scenario": "clean",
+      "kind": "concepto",
+      "question": "¿Qué hace el comodín # en un exchange topic?",
+      "must": [
+        [
+          "varias",
+          "cero o mas",
+          "una o mas",
+          "cualquier numero"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    },
+    {
+      "id": "concepto-trazado",
+      "scenario": "clean",
+      "kind": "concepto",
+      "question": "¿Cómo se activa el trazado de RabbitMQ?",
+      "must": [
+        [
+          "trace_on"
+        ]
+      ]
+    },
+    {
+      "id": "concepto-flujo",
+      "scenario": "clean",
+      "kind": "concepto",
+      "question": "¿Para qué sirve la pestaña Flujo?",
+      "must": [
+        [
+          "tiempo real",
+          "datos reales",
+          "en vivo"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    },
+    {
+      "id": "concepto-reparto",
+      "scenario": "clean",
+      "kind": "concepto",
+      "question": "¿Qué pasa si dos consumidores leen de la misma cola?",
+      "must": [
+        [
+          "repart",
+          "altern",
+          "turno"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    },
+    {
+      "id": "accion-borrar",
+      "scenario": "clean",
+      "kind": "accion",
+      "question": "Borra la cola eval-pedidos",
+      "must": [
+        [
+          "«colas»",
+          "pestana colas",
+          "pestana «colas»",
+          "en colas"
+        ]
+      ],
+      "must_not": [
+        "he borrado",
+        "he eliminado",
+        "ha sido eliminada"
+      ]
+    },
+    {
+      "id": "accion-parar",
+      "scenario": "clean",
+      "kind": "accion",
+      "question": "Para todos los emisores ahora mismo",
+      "must": [
+        [
+          "parar todo"
+        ]
+      ],
+      "must_not": [
+        "he parado",
+        "he detenido"
+      ]
+    },
+    {
+      "id": "accion-crear",
+      "scenario": "clean",
+      "kind": "accion",
+      "question": "Crea un exchange llamado eval-x",
+      "must": [
+        [
+          "exchanges"
+        ]
+      ],
+      "must_not": [
+        "he creado",
+        "ha sido creado"
+      ]
+    },
+    {
+      "id": "ajena-tiempo",
+      "scenario": "clean",
+      "kind": "ajena",
+      "question": "¿Qué tiempo hace hoy en Cádiz?",
+      "must": [
+        [
+          "no lo se",
+          "no tengo",
+          "no puedo"
+        ]
+      ],
+      "must_not": [
+        "grados",
+        "soleado",
+        "lluvia"
+      ]
+    },
+    {
+      "id": "ajena-futbol",
+      "scenario": "clean",
+      "kind": "ajena",
+      "question": "¿Quién ganó el mundial de fútbol de 2010?",
+      "must": [
+        [
+          "no lo se",
+          "no tengo",
+          "no puedo"
+        ]
+      ],
+      "must_not": [
+        "espana"
+      ]
+    },
+    {
+      "id": "limpio-estado",
+      "scenario": "clean",
+      "kind": "estado",
+      "question": "¿Está todo bien?",
+      "must": [
+        [
+          "ningun problema"
+        ]
+      ]
+    },
+    {
+      "id": "limpio-actividad",
+      "scenario": "clean",
+      "kind": "estado",
+      "question": "¿Hay algo pasando datos?",
+      "must": [
+        [
+          "no pasa",
+          "ningun mensaje",
+          "no se mueve",
+          "nada"
+        ]
+      ],
+      "must_not": [
+        "eval-"
+      ]
+    },
+    {
+      "id": "proyecto-apartados",
+      "scenario": "clean",
+      "kind": "proyecto",
+      "question": "¿Qué apartados tiene el laboratorio de RabbitMQ?",
+      "must": [
+        [
+          "generador"
+        ],
+        [
+          "flujo"
+        ],
+        [
+          "guia"
+        ]
+      ],
+      "must_not": [
+        "deshabilitad"
+      ]
+    },
+    {
+      "id": "proyecto-tecnologias",
+      "scenario": "clean",
+      "kind": "proyecto",
+      "question": "¿Con qué tecnologías está hecho el proyecto?",
+      "must": [
+        [
+          "spring"
+        ],
+        [
+          "angular"
+        ],
+        [
+          "python",
+          "fastapi"
+        ]
+      ]
+    },
+    {
+      "id": "proyecto-puerto",
+      "scenario": "clean",
+      "kind": "proyecto",
+      "question": "¿Cómo cambio el puerto del frontend?",
+      "must": [
+        [
+          "frontend_port"
+        ],
+        [
+          "infra/.env"
+        ]
+      ]
+    },
+    {
+      "id": "proyecto-modelo-ligero",
+      "scenario": "clean",
+      "kind": "proyecto",
+      "question": "Quiero usar un modelo más ligero, ¿cómo lo hago?",
+      "must": [
+        [
+          "assistant_model"
+        ]
+      ],
+      "must_not": [
+        "ollama_model"
+      ]
+    },
+    {
+      "id": "proyecto-reiniciar",
+      "scenario": "clean",
+      "kind": "proyecto",
+      "question": "¿Cómo reinicio RabbitMQ?",
+      "must": [
+        [
+          "restart rabbitmq",
+          "«estado»"
+        ]
+      ]
+    },
+    {
+      "id": "asistente-funciona",
+      "scenario": "clean",
+      "kind": "proyecto",
+      "question": "¿Cómo funcionas?",
+      "must": [
+        [
+          "ollama",
+          "modelo"
+        ],
+        [
+          "backend"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    },
+    {
+      "id": "asistente-fuentes",
+      "scenario": "clean",
+      "kind": "proyecto",
+      "question": "¿De dónde sacas la información?",
+      "must": [
+        [
+          "backend"
+        ],
+        [
+          "documentacion",
+          "manual",
+          "guia"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    },
+    {
+      "id": "asistente-privacidad",
+      "scenario": "clean",
+      "kind": "proyecto",
+      "question": "¿Usas internet o guardas mis preguntas?",
+      "must": [
+        [
+          "maquina",
+          "equipo",
+          "local",
+          "navegador"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    },
+    {
+      "id": "asistente-modelo",
+      "scenario": "clean",
+      "kind": "proyecto",
+      "question": "¿Qué modelo de IA usas?",
+      "must": [
+        [
+          "qwen2.5"
+        ]
+      ]
+    },
+    {
+      "id": "crece-porque",
+      "scenario": "growing_queue",
+      "kind": "datos",
+      "question": "¿Por qué crece la cola eval-cocina?",
+      "must": [
+        [
+          "eval-cocina"
+        ],
+        [
+          "entran",
+          "entra"
+        ],
+        [
+          "salen",
+          "sale"
+        ]
+      ]
+    },
+    {
+      "id": "crece-estado",
+      "scenario": "growing_queue",
+      "kind": "estado",
+      "question": "¿Está todo bien?",
+      "must": [
+        [
+          "eval-cocina"
+        ],
+        [
+          "crece"
+        ]
+      ]
+    },
+    {
+      "id": "crece-actividad",
+      "scenario": "growing_queue",
+      "kind": "estado",
+      "question": "¿Hay algo pasando datos?",
+      "must": [
+        [
+          "eval-horno"
+        ]
+      ]
+    },
+    {
+      "id": "crece-emisores",
+      "scenario": "growing_queue",
+      "kind": "datos",
+      "question": "¿Qué emisores hay en marcha?",
+      "must": [
+        [
+          "eval-horno"
+        ]
+      ],
+      "must_not": [
+        "eval-sirena",
+        "eval-sensor"
+      ]
+    },
+    {
+      "id": "crece-ritmo",
+      "scenario": "growing_queue",
+      "kind": "datos",
+      "question": "¿Cuántos mensajes por segundo publica el emisor eval-horno?",
+      "must": [
+        [
+          "10"
+        ]
+      ]
+    },
+    {
+      "id": "crece-consumidor",
+      "scenario": "growing_queue",
+      "kind": "datos",
+      "question": "¿Qué consumidor lee de la cola eval-cocina?",
+      "must": [
+        [
+          "eval-cocinero"
+        ]
+      ]
+    },
+    {
+      "id": "sin-consumidor-porque",
+      "scenario": "queue_without_consumer",
+      "kind": "datos",
+      "question": "¿Por qué no se vacía la cola eval-barra?",
+      "must": [
+        [
+          "consumidor"
+        ]
+      ],
+      "must_not": [
+        "crece porque"
+      ]
+    },
+    {
+      "id": "sin-consumidor-cuantos",
+      "scenario": "queue_without_consumer",
+      "kind": "datos",
+      "question": "¿Cuántos mensajes tiene la cola eval-barra?",
+      "must": [
+        [
+          "15"
+        ]
+      ]
+    },
+    {
+      "id": "dlq-hay",
+      "scenario": "dead_letter",
+      "kind": "datos",
+      "question": "¿Hay mensajes en alguna dead-letter queue?",
+      "must": [
+        [
+          "eval-pagos-fallidos"
+        ]
+      ]
+    },
+    {
+      "id": "dlq-porque",
+      "scenario": "dead_letter",
+      "kind": "datos",
+      "question": "¿Por qué hay mensajes en eval-pagos-fallidos?",
+      "must": [
+        [
+          "rechaz"
+        ]
+      ]
+    },
+    {
+      "id": "sin-enrutar-porque",
+      "scenario": "unrouted",
+      "kind": "datos",
+      "question": "¿Por qué hay mensajes sin enrutar?",
+      "must": [
+        [
+          "eval-sirena",
+          "eval-avisos"
+        ],
+        [
+          "binding"
+        ]
+      ]
+    },
+    {
+      "id": "sin-enrutar-entrega",
+      "scenario": "unrouted",
+      "kind": "datos",
+      "question": "¿Llegan a alguna cola los mensajes del emisor eval-sirena?",
+      "must": [
+        [
+          "ninguna cola",
+          "sin enrutar",
+          "no llegaron",
+          "no llegan",
+          "descart"
+        ]
+      ]
+    },
+    {
+      "id": "trazado-flujo",
+      "scenario": "trace_off",
+      "kind": "datos",
+      "question": "¿Por qué no veo nada en la pestaña Flujo?",
+      "must": [
+        [
+          "trazado",
+          "tracing"
+        ],
+        [
+          "trace_on"
+        ]
+      ]
+    },
+    {
+      "id": "trazado-activo",
+      "scenario": "trace_off",
+      "kind": "datos",
+      "question": "¿Está activo el trazado?",
+      "must": [
+        [
+          "desactivado",
+          "no esta activo",
+          "false"
+        ]
+      ]
+    },
+    {
+      "id": "fallado-que",
+      "scenario": "failed_emitter",
+      "kind": "datos",
+      "question": "¿Qué le pasa al emisor eval-sensor?",
+      "must": [
+        [
+          "eval-sensor"
+        ],
+        [
+          "error",
+          "fall",
+          "paro",
+          "detuvo",
+          "detenido"
+        ]
+      ]
+    },
+    {
+      "id": "fallado-estado",
+      "scenario": "failed_emitter",
+      "kind": "estado",
+      "question": "¿Está todo bien?",
+      "must": [
+        [
+          "eval-sensor"
+        ]
+      ]
+    },
+    {
+      "id": "caido-cola",
+      "scenario": "rabbitmq_down",
+      "kind": "caido",
+      "question": "¿Cómo va la cola eval-cocina?",
+      "must": [
+        [
+          "rabbitmq no esta disponible"
+        ]
+      ]
+    },
+    {
+      "id": "caido-estado",
+      "scenario": "rabbitmq_down",
+      "kind": "caido",
+      "question": "¿Está todo bien?",
+      "must": [
+        [
+          "rabbitmq no esta disponible"
+        ]
+      ]
+    },
+    {
+      "id": "caido-concepto",
+      "scenario": "rabbitmq_down",
+      "kind": "caido",
+      "question": "¿Qué es un binding?",
+      "must": [
+        [
+          "exchange"
+        ],
+        [
+          "cola"
+        ]
+      ],
+      "must_not": [
+        "no lo se"
+      ]
+    }
+  ]
+}

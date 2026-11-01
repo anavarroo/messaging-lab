@@ -1,0 +1,134 @@
+/* El formulario se reparte en dos columnas en pantallas anchas; lo largo (plantilla, avisos y botón) ocupa todo el ancho */
+.emitter-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--space-5);
+  align-items: start;
+}
+
+.emitter-form .field {
+  max-width: none;
+}
+
+.columns,
+.presets,
+.preset-description,
+.field.wide,
+.limits,
+.emitter-form > .help,
+.check,
+.submit-error,
+.emitter-form > button[type='submit'] {
+  grid-column: 1 / -1;
+}
+
+.presets {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+}
+
+.presets .field {
+  margin-bottom: 0;
+  min-width: 16rem;
+}
+
+.preset-description {
+  margin: calc(var(--space-2) * -1) 0 var(--space-4);
+}
+
+.frequency {
+  margin: 0 0 var(--space-4);
+}
+
+.modes {
+  display: flex;
+  gap: var(--space-5);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-3);
+}
+
+.modes label,
+.check {
+  font-weight: 400;
+}
+
+.range,
+.limits {
+  display: flex;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.limits .field {
+  flex: 1 1 12rem;
+}
+
+.field.wide {
+  max-width: none;
+}
+
+textarea {
+  min-height: 9rem;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  resize: vertical;
+}
+
+.preview-actions {
+  margin-top: var(--space-1);
+}
+
+.preview-body {
+  margin: var(--space-2) 0 var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  overflow: auto;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+.preview-size {
+  margin: 0;
+}
+
+.check {
+  display: block;
+  margin: var(--space-2) 0 var(--space-4);
+}
+
+.emitter-form > .help {
+  margin-bottom: var(--space-2);
+}
+
+/* nombre y frecuencia a un lado; el destino, al otro */
+.columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 var(--space-5);
+  align-items: start;
+}
+
+.column {
+  min-width: 0;
+}
+
+.emitter-form > button[type='submit'] {
+  justify-self: start;
+}
+
+@media (max-width: 52rem) {
+  .columns {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .emitter-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

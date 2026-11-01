@@ -1,0 +1,17 @@
+.queues {
+  max-width: 66rem;
+}
+
+.number {
+  text-align: right;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.empty {
+  font-weight: 600;
+}

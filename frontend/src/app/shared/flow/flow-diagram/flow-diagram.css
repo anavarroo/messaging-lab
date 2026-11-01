@@ -1,0 +1,64 @@
+:host {
+  display: block;
+  --flow-line: #8a8f98;
+  --flow-node: #ffffff;
+  --flow-node-stroke: var(--text-muted);
+  --flow-text: var(--text);
+  --flow-muted: var(--text-muted);
+  --flow-dot: var(--primary);
+  --flow-unrouted: var(--danger);
+}
+
+.diagram {
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.edge {
+  fill: none;
+  stroke: var(--flow-line);
+  stroke-width: 1.2;
+}
+
+.node rect {
+  fill: var(--flow-node);
+  stroke: var(--flow-node-stroke);
+  stroke-width: 1.4;
+}
+
+/* el tipo de nodo se distingue también por el trazo, no solo por el texto */
+.node.router rect {
+  stroke-width: 2.6;
+}
+
+.node.destination rect {
+  stroke-dasharray: 5 3;
+}
+
+.node.consumer rect {
+  rx: 18;
+}
+
+.label {
+  fill: var(--flow-text);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.caption,
+.numbers {
+  fill: var(--flow-muted);
+  font-size: 10px;
+}
+
+.dot {
+  fill: var(--flow-dot);
+  stroke: var(--flow-node);
+  stroke-width: 1;
+}
+
+.dot.unrouted {
+  fill: var(--flow-unrouted);
+}

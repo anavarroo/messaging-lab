@@ -1,0 +1,143 @@
+:host {
+  display: block;
+}
+
+.rabbitmq {
+  padding: 1.5rem 1.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+h2 {
+  margin: 0 0 var(--space-4);
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.body {
+  margin-bottom: var(--space-4);
+}
+
+.details {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.75rem 1.5rem;
+  margin: 0 0 var(--space-4);
+}
+
+.details dt {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.details dd {
+  margin: 0;
+}
+
+.ok,
+.warn,
+.bad {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 650;
+}
+
+.ok::before,
+.warn::before,
+.bad::before {
+  content: '';
+  flex: none;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+}
+
+.ok {
+  color: var(--success);
+}
+
+.ok::before {
+  background: var(--success);
+  box-shadow: 0 0 0 4px rgba(21, 128, 61, 0.18);
+}
+
+.warn {
+  color: var(--warning);
+}
+
+.warn::before {
+  background: var(--warning);
+  box-shadow: 0 0 0 4px rgba(163, 92, 0, 0.18);
+}
+
+.bad {
+  color: var(--danger);
+}
+
+.bad::before {
+  background: var(--danger);
+  box-shadow: 0 0 0 4px rgba(194, 54, 43, 0.18);
+}
+
+.muted,
+.checking,
+.help {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.help {
+  margin: 0;
+  font-size: 0.92rem;
+}
+
+.error,
+.warning {
+  margin: 0;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--radius-sm);
+}
+
+.error {
+  border-left: 4px solid var(--danger);
+  background: var(--danger-soft);
+  color: var(--danger-ink);
+}
+
+.warning {
+  border-left: 4px solid var(--warning);
+  background: var(--warning-soft);
+  color: #6b3d00;
+}
+
+button {
+  padding: 0.55rem 1.15rem;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+}
+
+button:disabled {
+  border-color: var(--border);
+  background: var(--surface-2);
+  color: #94a0b3;
+  cursor: not-allowed;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}

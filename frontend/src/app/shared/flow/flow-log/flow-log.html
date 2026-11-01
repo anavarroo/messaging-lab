@@ -1,0 +1,86 @@
+<section class="log" aria-labelledby="flow-log-title">
+  <div class="header">
+    <h4 id="flow-log-title">Registro de eventos</h4>
+    <div class="buttons">
+      <button type="button" class="secondary" [attr.aria-pressed]="paused()" (click)="togglePause()">
+        {{ paused() ? 'Reanudar registro' : 'Pausar registro' }}
+      </button>
+      <button type="button" class="secondary" (click)="clear()">Limpiar</button>
+    </div>
+  </div>
+
+  <div aria-live="polite">
+    @if (paused()) {
+      <p class="notice">
+        Registro en pausa.
+        @if (waiting() > 0) {
+          Han llegado {{ waiting() }} eventos más; los verás al reanudar.
+        }
+      </p>
+    }
+    @if (omitted() > 0) {
+      <p class="notice omitted">Se omiten {{ omitted() }} eventos por segundo en el registro y la animación; los contadores son exactos.</p>
+    }
+  </div>
+
+  @if (rows().length === 0) {
+    <p class="empty">Aún no ha pasado ningún mensaje.</p>
+  } @else {
+    <div class="scroll">
+      <table>
+        <caption class="visually-hidden">Últimos eventos de flujo, el más reciente primero</caption>
+        <thead>
+          <tr>
+            <th scope="col">Hora</th>
+            <th scope="col">Tipo</th>
+            <th scope="col">Recorrido</th>
+            <th scope="col">{{ vocabulary().key }}</th>
+            <th scope="col" class="number">Bytes</th>
+            <th scope="col">Detalle</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (event of rows(); track event.id) {
+            <tr [class.selected]="event.id === selectedId()" [class.unrouted]="event.unrouted">
+              <td class="time">{{ time(event.time) }}</td>
+              <td>
+                {{ event.type === 'PUBLISH' ? 'Publicación' : 'Entrega' }}
+                @if (event.unrouted) {
+                  <span class="badge unrouted-badge">sin enrutar</span>
+                }
+                @if (event.redelivered) {
+                  <span class="badge">reentrega</span>
+                }
+              </td>
+              <td>{{ route(event) }}</td>
+              <td class="key">{{ event.key }}</td>
+              <td class="number">{{ event.sizeBytes }}</td>
+              <td>
+                <button type="button" class="secondary" [attr.aria-expanded]="event.id === selectedId()" (click)="select(event)">
+                  {{ event.id === selectedId() ? 'Ocultar' : 'Ver' }}
+                </button>
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @if (hiddenRows() > 0) {
+      <p class="help">Se muestran los {{ rows().length }} más recientes de {{ shown().length }}.</p>
+    }
+  }
+
+  @if (selected(); as event) {
+    <div class="detail" role="region" aria-label="Detalle del evento">
+      <h5>Evento {{ event.id }}</h5>
+      <p class="help">
+        {{ event.type === 'PUBLISH' ? 'Publicado por ' + (name(event.producer) || 'un publicador desconocido') : 'Entregado a ' + name(event.consumer) }}
+        · {{ event.sizeBytes }} bytes
+      </p>
+      <h6>Cuerpo @if (event.bodyTruncated) { <span class="badge">truncado a 4 KB</span> }</h6>
+      <pre class="body">{{ event.body }}</pre>
+      <h6>Propiedades y cabeceras</h6>
+      <pre class="properties">{{ properties(event) }}</pre>
+    </div>
+  }
+</section>

@@ -1,0 +1,421 @@
+<article class="guide" aria-labelledby="guide-title">
+  <h3 id="guide-title">Guía de RabbitMQ</h3>
+  <p class="intro">
+    Si nunca has usado RabbitMQ, empieza aquí. Esta guía explica con palabras sencillas qué es cada pieza y te
+    lleva de la mano por un ejemplo completo que haces tú mismo en este laboratorio.
+  </p>
+
+  <nav class="submenu" #menu aria-label="Partes de la guía">
+    @for (item of views; track item.id) {
+      <button
+        type="button"
+        [class.active]="item.id === view()"
+        [attr.aria-current]="item.id === view() ? 'page' : null"
+        (click)="show(item.id)"
+      >
+        <span class="submenu-label">{{ item.label }}</span>
+        <span class="submenu-description">{{ item.description }}</span>
+      </button>
+    }
+  </nav>
+
+  @switch (view()) {
+  @case ('explicacion') {
+  <nav class="index" id="indice" aria-label="Índice de la guía">
+    <h4>En esta guía</h4>
+    <ol>
+      @for (section of sections; track section.id) {
+        <li>
+          <a [routerLink]="[]" [fragment]="section.id">{{ section.title }}</a>
+        </li>
+      }
+    </ol>
+  </nav>
+
+  <!-- ===================== El recorrido ===================== -->
+  <section class="guide-section" id="recorrido" aria-labelledby="recorrido-title">
+    <h4 id="recorrido-title">El recorrido de un mensaje</h4>
+    <p>
+      <strong>RabbitMQ es una oficina de correos para aplicaciones.</strong> Una aplicación deja un mensaje (como
+      una carta) y RabbitMQ se encarga de que llegue a quien tiene que leerlo, aunque quien lo envía no sepa quién
+      es, ni si está disponible en ese momento. Mientras tanto, el mensaje espera guardado, sin perderse.
+    </p>
+    <p>El viaje de un mensaje siempre es el mismo:</p>
+
+    <figure class="diagram">
+      <svg viewBox="0 0 740 190" role="img" aria-labelledby="d-recorrido-t d-recorrido-d">
+        <title id="d-recorrido-t">Recorrido de un mensaje por RabbitMQ</title>
+        <desc id="d-recorrido-d">
+          El productor envía un mensaje con su routing key al exchange. El exchange, según los bindings, lo
+          deja en una cola. Un consumidor lo recoge de la cola y responde: confirmar, que elimina el mensaje;
+          rechazar y reencolar, que lo devuelve a la cola; o rechazar sin reencolar, que lo envía a la
+          dead-letter queue.
+        </desc>
+        <defs>
+          <marker id="a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0 0 L10 5 L0 10 z" class="arrowhead" />
+          </marker>
+        </defs>
+        <g class="node">
+          <rect x="10" y="30" width="130" height="56" rx="8" />
+          <text x="75" y="63" text-anchor="middle">1. Productor</text>
+          <rect x="205" y="30" width="130" height="56" rx="8" />
+          <text x="270" y="63" text-anchor="middle">2. Exchange</text>
+          <rect x="400" y="30" width="130" height="56" rx="8" />
+          <text x="465" y="63" text-anchor="middle">3. Cola</text>
+          <rect x="595" y="30" width="130" height="56" rx="8" />
+          <text x="660" y="63" text-anchor="middle">4. Consumidor</text>
+        </g>
+        <g class="line">
+          <path d="M140 58 H203" marker-end="url(#a1)" />
+          <path d="M335 58 H398" marker-end="url(#a1)" />
+          <path d="M530 58 H593" marker-end="url(#a1)" />
+        </g>
+        <g class="label">
+          <text x="172" y="22" text-anchor="middle">mensaje</text>
+          <text x="367" y="22" text-anchor="middle">binding</text>
+          <text x="562" y="22" text-anchor="middle">entrega</text>
+        </g>
+        <g class="line">
+          <path d="M660 86 V118 H285" />
+          <path d="M285 118 V138" marker-end="url(#a1)" />
+          <path d="M465 118 V138" marker-end="url(#a1)" />
+          <path d="M647 118 V138" marker-end="url(#a1)" />
+        </g>
+        <g class="outcome">
+          <rect x="205" y="140" width="160" height="42" rx="6" />
+          <text x="285" y="157" text-anchor="middle">Confirmar</text>
+          <text x="285" y="174" text-anchor="middle" class="small">se elimina</text>
+          <rect x="385" y="140" width="160" height="42" rx="6" />
+          <text x="465" y="157" text-anchor="middle">Rechazar y reencolar</text>
+          <text x="465" y="174" text-anchor="middle" class="small">vuelve a la cola</text>
+          <rect x="565" y="140" width="165" height="42" rx="6" />
+          <text x="647" y="157" text-anchor="middle">Rechazar sin reencolar</text>
+          <text x="647" y="174" text-anchor="middle" class="small">dead-letter queue</text>
+        </g>
+      </svg>
+      <figcaption>
+        <strong>En palabras:</strong> el productor envía un mensaje con su etiqueta (routing key) al exchange. El
+        exchange, según las reglas (bindings), lo deja en una cola. Un consumidor lo recoge de la cola y responde:
+        confirmar (el mensaje se elimina), rechazar y reencolar (vuelve a la cola) o rechazar sin reencolar (va a
+        la dead-letter queue).
+      </figcaption>
+    </figure>
+
+    <ol class="steps">
+      <li>
+        <strong>El productor</strong> (quien envía) escribe un <strong>mensaje</strong> y le pone una etiqueta,
+        la <strong>routing key</strong>.
+      </li>
+      <li>
+        El mensaje llega a un <strong>exchange</strong>, que es el clasificador: mira la etiqueta y decide a qué
+        buzones mandarlo.
+      </li>
+      <li>
+        Las reglas que usa para decidirlo se llaman <strong>bindings</strong>: cada una une el exchange con un
+        buzón.
+      </li>
+      <li>
+        Los buzones se llaman <strong>colas</strong>. El mensaje espera en la cola, en orden, hasta que alguien
+        lo recoja.
+      </li>
+      <li>
+        Quien lo recoge es un <strong>consumidor</strong>. Cuando termina, responde a RabbitMQ con un
+        <strong>acknowledgement</strong> (una confirmación) para decirle qué ha hecho con el mensaje.
+      </li>
+      <li>
+        Si el consumidor lo rechaza y no se devuelve a la cola, el mensaje puede ir a una
+        <strong>dead-letter queue</strong>, una cola especial para lo que no se pudo procesar.
+      </li>
+    </ol>
+    <p class="back"><a [routerLink]="[]" fragment="indice">Volver al índice</a></p>
+  </section>
+
+  <!-- ===================== Los elementos ===================== -->
+  <section class="guide-section" id="elementos" aria-labelledby="elementos-title">
+    <h4 id="elementos-title">Los elementos, uno a uno</h4>
+    <p>
+      Cada elemento se explica igual: primero <em>en una frase</em>, luego con una <em>analogía</em> del correo,
+      después con un <em>ejemplo</em> de una pizzería y, por último, <em>dónde lo ves</em> en este laboratorio.
+    </p>
+
+    @for (element of elements; track element.id) {
+      <article class="element" [id]="element.id" [attr.aria-labelledby]="element.id + '-title'">
+        <h5 [id]="element.id + '-title'">{{ element.name }}</h5>
+        <h6 class="part">En una frase</h6>
+        <p>{{ element.inOneSentence }}</p>
+        <h6 class="part">Piénsalo así</h6>
+        <p>{{ element.think }}</p>
+        <h6 class="part">Ejemplo</h6>
+        <p>{{ element.example }}</p>
+        <h6 class="part">Dónde lo ves en el laboratorio</h6>
+        <p>
+          {{ element.whereInLab }}
+          @for (link of element.links; track link.path) {
+            <a class="lab-link" [routerLink]="link.path">Ir a «{{ link.label }}»</a>
+          }
+        </p>
+      </article>
+    }
+    <p class="back"><a [routerLink]="[]" fragment="indice">Volver al índice</a></p>
+  </section>
+
+  <!-- ===================== Los tipos de exchange ===================== -->
+  <section class="guide-section" id="tipos-de-exchange" aria-labelledby="tipos-title">
+    <h4 id="tipos-title">Los tres tipos de exchange</h4>
+    <p>
+      No todos los exchanges reparten igual. El <strong>tipo</strong> decide cómo se comparan la routing key del
+      mensaje y la del binding. Este laboratorio ofrece tres. Los ejemplos de estos diagramas usan el mismo
+      mensaje, con la routing key <code>pedido.pizza</code>.
+    </p>
+
+    <article class="exchange-type" id="direct" aria-labelledby="direct-title">
+      <h5 id="direct-title">Direct: «solo si es exactamente igual»</h5>
+      <h6 class="part">En una frase</h6>
+      <p>Entrega el mensaje a las colas cuyo binding tiene <strong>exactamente</strong> la misma routing key.</p>
+      <h6 class="part">Ejemplo</h6>
+      <p>
+        Un pedido con <code>pedido.pizza</code> llega a la cola «cocina», cuyo binding es <code>pedido.pizza</code>.
+        No llega a «barra», cuyo binding es <code>pedido.bebida</code>.
+      </p>
+      <figure class="diagram">
+        <svg viewBox="0 0 640 210" role="img" aria-labelledby="d-direct-t d-direct-d">
+          <title id="d-direct-t">Exchange direct</title>
+          <desc id="d-direct-d">
+            Un mensaje con la routing key pedido.pizza llega a un exchange direct. Llega a la cola cocina, cuyo
+            binding es pedido.pizza, pero no a la cola barra, cuyo binding es pedido.bebida.
+          </desc>
+          <defs>
+            <marker id="a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" class="arrowhead" />
+            </marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="75" width="150" height="60" rx="8" />
+            <text x="85" y="102" text-anchor="middle">Exchange direct</text>
+            <text x="85" y="122" text-anchor="middle" class="small">pedido.pizza</text>
+            <rect x="430" y="20" width="200" height="60" rx="8" />
+            <text x="530" y="47" text-anchor="middle">Cola «cocina»</text>
+            <text x="530" y="67" text-anchor="middle" class="small">binding: pedido.pizza</text>
+            <rect x="430" y="130" width="200" height="60" rx="8" class="skip" />
+            <text x="530" y="157" text-anchor="middle">Cola «barra»</text>
+            <text x="530" y="177" text-anchor="middle" class="small">binding: pedido.bebida</text>
+          </g>
+          <path d="M160 95 C 300 95, 300 50, 428 50" class="line ok" marker-end="url(#a2)" fill="none" />
+          <path d="M160 115 C 300 115, 300 160, 428 160" class="line no" marker-end="url(#a2)" fill="none" />
+          <text x="300" y="58" text-anchor="middle" class="verdict ok">✓ llega</text>
+          <text x="300" y="150" text-anchor="middle" class="verdict no">✗ no llega</text>
+        </svg>
+        <figcaption>
+          <strong>En palabras:</strong> el mensaje <code>pedido.pizza</code> llega a «cocina» (binding
+          <code>pedido.pizza</code>) y no llega a «barra» (binding <code>pedido.bebida</code>).
+        </figcaption>
+      </figure>
+      <h6 class="part">Cuándo usarlo</h6>
+      <p>Cuando tienes categorías claras y cerradas: pizzas por un lado y bebidas por otro.</p>
+    </article>
+
+    <article class="exchange-type" id="fanout" aria-labelledby="fanout-title">
+      <h5 id="fanout-title">Fanout: «para todos»</h5>
+      <h6 class="part">En una frase</h6>
+      <p>Entrega una copia del mensaje a <strong>todas</strong> las colas enlazadas, sin mirar la routing key.</p>
+      <h6 class="part">Ejemplo</h6>
+      <p>
+        El aviso «cerramos en 10 minutos» llega a la cocina y a la barra a la vez, sea cual sea su etiqueta. Por
+        eso, al crear un binding con un fanout, el laboratorio no te pide routing key.
+      </p>
+      <figure class="diagram">
+        <svg viewBox="0 0 640 210" role="img" aria-labelledby="d-fanout-t d-fanout-d">
+          <title id="d-fanout-t">Exchange fanout</title>
+          <desc id="d-fanout-d">
+            Un mensaje llega a un exchange fanout. El fanout ignora la routing key y entrega una copia a las dos
+            colas enlazadas, cocina y barra.
+          </desc>
+          <defs>
+            <marker id="a3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" class="arrowhead" />
+            </marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="75" width="150" height="60" rx="8" />
+            <text x="85" y="102" text-anchor="middle">Exchange fanout</text>
+            <text x="85" y="122" text-anchor="middle" class="small">pedido.pizza</text>
+            <rect x="430" y="20" width="200" height="60" rx="8" />
+            <text x="530" y="47" text-anchor="middle">Cola «cocina»</text>
+            <text x="530" y="67" text-anchor="middle" class="small">sin routing key</text>
+            <rect x="430" y="130" width="200" height="60" rx="8" />
+            <text x="530" y="157" text-anchor="middle">Cola «barra»</text>
+            <text x="530" y="177" text-anchor="middle" class="small">sin routing key</text>
+          </g>
+          <path d="M160 95 C 300 95, 300 50, 428 50" class="line ok" marker-end="url(#a3)" fill="none" />
+          <path d="M160 115 C 300 115, 300 160, 428 160" class="line ok" marker-end="url(#a3)" fill="none" />
+          <text x="300" y="58" text-anchor="middle" class="verdict ok">✓ llega</text>
+          <text x="300" y="150" text-anchor="middle" class="verdict ok">✓ llega</text>
+        </svg>
+        <figcaption>
+          <strong>En palabras:</strong> el fanout ignora la routing key y entrega una copia a «cocina» y otra a
+          «barra».
+        </figcaption>
+      </figure>
+      <h6 class="part">Cuándo usarlo</h6>
+      <p>Cuando quieres difundir lo mismo a todos: avisos, noticias, cambios de configuración.</p>
+    </article>
+
+    <article class="exchange-type" id="topic" aria-labelledby="topic-title">
+      <h5 id="topic-title">Topic: «según un patrón»</h5>
+      <h6 class="part">En una frase</h6>
+      <p>
+        Entrega el mensaje a las colas cuyo binding tiene un <strong>patrón</strong> que encaja con la routing
+        key. Las routing keys son palabras separadas por puntos.
+      </p>
+      <h6 class="part">Ejemplo</h6>
+      <p>
+        Los patrones usan dos comodines. <strong><code>*</code> sustituye exactamente una palabra</strong> y
+        <strong><code>#</code> sustituye cero o más palabras</strong>. Así, <code>pedido.*</code> recibe
+        <code>pedido.pizza</code> y <code>pedido.bebida</code>, y <code>#</code> recibe todo.
+      </p>
+      <figure class="diagram">
+        <svg viewBox="0 0 640 290" role="img" aria-labelledby="d-topic-t d-topic-d">
+          <title id="d-topic-t">Exchange topic</title>
+          <desc id="d-topic-d">
+            Un mensaje con la routing key pedido.pizza llega a un exchange topic. Llega a la cola cocina, con
+            el patrón pedido.asterisco, y a la cola todo, con el patrón almohadilla. No llega a la cola
+            ofertas, con el patrón oferta.asterisco.
+          </desc>
+          <defs>
+            <marker id="a4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+              <path d="M0 0 L10 5 L0 10 z" class="arrowhead" />
+            </marker>
+          </defs>
+          <g class="node">
+            <rect x="10" y="115" width="150" height="60" rx="8" />
+            <text x="85" y="142" text-anchor="middle">Exchange topic</text>
+            <text x="85" y="162" text-anchor="middle" class="small">pedido.pizza</text>
+            <rect x="430" y="10" width="200" height="60" rx="8" />
+            <text x="530" y="37" text-anchor="middle">Cola «cocina»</text>
+            <text x="530" y="57" text-anchor="middle" class="small">patrón: pedido.*</text>
+            <rect x="430" y="115" width="200" height="60" rx="8" />
+            <text x="530" y="142" text-anchor="middle">Cola «todo»</text>
+            <text x="530" y="162" text-anchor="middle" class="small">patrón: #</text>
+            <rect x="430" y="220" width="200" height="60" rx="8" class="skip" />
+            <text x="530" y="247" text-anchor="middle">Cola «ofertas»</text>
+            <text x="530" y="267" text-anchor="middle" class="small">patrón: oferta.*</text>
+          </g>
+          <path d="M160 130 C 300 130, 300 40, 428 40" class="line ok" marker-end="url(#a4)" fill="none" />
+          <path d="M160 145 H 428" class="line ok" marker-end="url(#a4)" fill="none" />
+          <path d="M160 160 C 300 160, 300 250, 428 250" class="line no" marker-end="url(#a4)" fill="none" />
+          <text x="300" y="68" text-anchor="middle" class="verdict ok">✓ llega</text>
+          <text x="300" y="138" text-anchor="middle" class="verdict ok">✓ llega</text>
+          <text x="300" y="218" text-anchor="middle" class="verdict no">✗ no llega</text>
+        </svg>
+        <figcaption>
+          <strong>En palabras:</strong> <code>pedido.pizza</code> llega a «cocina» (patrón <code>pedido.*</code>) y a
+          «todo» (patrón <code>#</code>), pero no a «ofertas» (patrón <code>oferta.*</code>).
+        </figcaption>
+      </figure>
+
+      <table class="patterns">
+        <caption>
+          Qué mensajes recibe cada patrón
+        </caption>
+        <thead>
+          <tr>
+            <th scope="col">Patrón</th>
+            <th scope="col">Recibe</th>
+            <th scope="col">No recibe</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (example of topicExamples; track example.pattern) {
+            <tr>
+              <th scope="row">
+                <code>{{ example.pattern }}</code>
+              </th>
+              <td>{{ example.receives }}</td>
+              <td>{{ example.doesNotReceive }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+      <h6 class="part">Cuándo usarlo</h6>
+      <p>
+        Cuando las etiquetas tienen niveles (<code>pedido.pizza.grande</code>) y cada cola quiere un grupo
+        distinto: una solo las pizzas, otra todos los pedidos, otra solo lo urgente.
+      </p>
+    </article>
+    <p>
+      RabbitMQ tiene más tipos de exchange (por ejemplo, <em>headers</em>) y más tipos de cola, pero este
+      laboratorio solo usa estos tres tipos de exchange y colas normales.
+    </p>
+    <p class="back"><a [routerLink]="[]" fragment="indice">Volver al índice</a></p>
+  </section>
+
+  <!-- ===================== Ideas que confunden ===================== -->
+  <section class="guide-section" id="ideas-que-confunden" aria-labelledby="ideas-title">
+    <h4 id="ideas-title">Ideas que suelen confundir</h4>
+    @for (idea of ideas; track idea.id) {
+      <article class="idea" [id]="idea.id" [attr.aria-labelledby]="idea.id + '-title'">
+        <h5 [id]="idea.id + '-title'">{{ idea.title }}</h5>
+        @for (paragraph of idea.paragraphs; track $index) {
+          <p>{{ paragraph }}</p>
+        }
+      </article>
+    }
+    <p class="back"><a [routerLink]="[]" fragment="indice">Volver al índice</a></p>
+  </section>
+
+  <!-- ===================== Ejemplo paso a paso ===================== -->
+
+
+  <!-- ===================== Si algo falla ===================== -->
+  <section class="guide-section" id="si-algo-falla" aria-labelledby="falla-title">
+    <h4 id="falla-title">Si algo no sale como esperas</h4>
+    <p>Estos son los despistes más habituales de quien empieza, con su causa y su solución.</p>
+    @for (trouble of troubles; track trouble.id) {
+      <article class="trouble" [id]="trouble.id" [attr.aria-labelledby]="trouble.id + '-title'">
+        <h5 [id]="trouble.id + '-title'">«{{ trouble.problem }}»</h5>
+        <h6 class="part">Puede ser que…</h6>
+        <ul>
+          @for (cause of trouble.causes; track $index) {
+            <li>{{ cause }}</li>
+          }
+        </ul>
+        <h6 class="part">Qué hacer</h6>
+        <p>{{ trouble.solution }}</p>
+      </article>
+    }
+    <p class="back"><a [routerLink]="[]" fragment="indice">Volver al índice</a></p>
+  </section>
+
+  <!-- ===================== Glosario ===================== -->
+  <section class="guide-section" id="glosario" aria-labelledby="glosario-title">
+    <h4 id="glosario-title">Glosario</h4>
+    <dl class="glossary">
+      @for (entry of glossary; track entry.term) {
+        <dt>{{ entry.term }}</dt>
+        <dd>{{ entry.definition }}</dd>
+      }
+    </dl>
+    <p class="back"><a [routerLink]="[]" fragment="indice">Volver al índice</a></p>
+  </section>
+  }
+  @case ('pizzeria') {
+  <section class="guide-section" id="ejemplo" aria-labelledby="ejemplo-title">
+    <h4 id="ejemplo-title">Ejemplo 1: la pizzería</h4>
+    <app-guide-example part="pizzeria" />
+  </section>
+  }
+  @case ('variante') {
+  <section class="guide-section" id="variante" aria-labelledby="variante-title">
+    <h4 id="variante-title">Ejemplo 2: la variante con un exchange fanout</h4>
+    <app-guide-example part="variante" />
+  </section>
+  }
+  @case ('generador') {
+  <section class="guide-section" id="generador" aria-labelledby="generador-title">
+    <h4 id="generador-title">Ejemplo 3: con el generador y el flujo en tiempo real</h4>
+    <app-guide-example part="generador" />
+  </section>
+  }
+  }
+</article>

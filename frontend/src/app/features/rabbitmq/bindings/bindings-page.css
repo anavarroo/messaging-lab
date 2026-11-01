@@ -1,0 +1,26 @@
+.bindings {
+  max-width: 66rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.fanout {
+  margin: 0 0 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border-left: 4px solid var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary-hover);
+}
+
+.key {
+  font-family: ui-monospace, monospace;
+}
+
+.empty {
+  font-weight: 600;
+}

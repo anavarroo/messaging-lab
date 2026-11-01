@@ -1,0 +1,148 @@
+.emitters {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.emitter {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-left-width: 5px;
+  border-radius: 6px;
+}
+
+.emitter.status-running {
+  border-left-color: var(--success);
+}
+
+.emitter.status-paused {
+  border-left-color: #b58100;
+}
+
+.emitter.status-failed {
+  border-left-color: var(--danger);
+}
+
+.emitter.status-stopped,
+.emitter.status-finished {
+  border-left-color: #888;
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+h5 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.where {
+  margin: 0.125rem 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  overflow-wrap: anywhere;
+}
+
+.badge {
+  flex: none;
+  padding: 0.1rem 0.6rem;
+  border-radius: 999px;
+  background: var(--border);
+  color: #333;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.badge.status-running {
+  background: var(--success-soft);
+  color: #11602b;
+}
+
+.badge.status-paused {
+  background: #fff8e1;
+  color: #5c4300;
+}
+
+.badge.status-failed {
+  background: var(--danger-soft);
+  color: var(--danger-ink);
+}
+
+.counters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1.5rem;
+  margin: 0.5rem 0;
+}
+
+.counters dt,
+.counters dd {
+  display: inline;
+  margin: 0;
+}
+
+.counters dt {
+  color: var(--text-muted);
+}
+
+.counters dt::after {
+  content: ': ';
+}
+
+.counters dd {
+  font-weight: 600;
+}
+
+.stop-message {
+  margin: 0 0 0.5rem;
+  padding: 0.4rem 0.6rem;
+  border-left: 4px solid var(--focus);
+  background: #fff8e1;
+  color: #5c4300;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+button {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--primary);
+  border-radius: 4px;
+  background: var(--primary);
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+
+button.secondary {
+  background: #fff;
+  color: var(--primary);
+}
+
+button.danger {
+  border-color: var(--danger);
+  background: #fff;
+  color: var(--danger);
+}
+
+button:disabled {
+  border-color: #aaa;
+  background: var(--border);
+  color: #777;
+  cursor: not-allowed;
+}
+
+button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}

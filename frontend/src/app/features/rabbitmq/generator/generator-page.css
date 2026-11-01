@@ -1,0 +1,113 @@
+.generator {
+  max-width: 66rem;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin: 0 0 var(--space-2);
+}
+
+.refresh-note {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.limit-summary {
+  margin: 0 0 0.75rem;
+}
+
+.limit-form {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.limit-form .field {
+  margin-bottom: 0;
+}
+
+.limit-form button {
+  align-self: flex-start;
+  margin-top: 1.7rem;
+}
+
+/* Las dos mitades del generador, bien separadas: quien publica y quien consume */
+.panel {
+  margin: var(--space-6) 0;
+  padding: 1.5rem 1.75rem 1.75rem;
+  border: 1px solid var(--border);
+  border-top: 5px solid var(--panel-accent);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.emitters-panel {
+  --panel-accent: var(--primary);
+}
+
+.consumers-panel {
+  --panel-accent: var(--success);
+}
+
+/* dentro de un panel, las zonas de formulario son bloques suaves, no otras tarjetas */
+.panel .create {
+  margin: var(--space-5) 0;
+  padding: 1.25rem 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  box-shadow: none;
+}
+
+.panel-header {
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+
+.panel-header h4 {
+  margin: var(--space-1) 0;
+  font-size: 1.35rem;
+}
+
+.panel-header .help {
+  margin: 0;
+}
+
+.role {
+  display: inline-block;
+  padding: 0.1rem 0.75rem;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--panel-accent) 12%, white);
+  color: var(--panel-accent);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.consumers-panel > .role {
+  margin-bottom: var(--space-2);
+}
+
+.panel h5 {
+  margin: 0 0 var(--space-3);
+  font-size: 1.05rem;
+}
+
+.queue-warning {
+  margin: 0 0 var(--space-4);
+  padding: 0.85rem 1.1rem;
+  border-left: 4px solid var(--warning);
+  border-radius: var(--radius-sm);
+  background: var(--warning-soft);
+  color: #6b3d00;
+}
+
+.queue-warning ul {
+  margin: var(--space-1) 0 0;
+  padding-left: 1.25rem;
+}

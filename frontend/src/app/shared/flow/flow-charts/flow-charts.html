@@ -1,0 +1,18 @@
+<section class="charts" aria-labelledby="flow-charts-title">
+  <h4 id="flow-charts-title">Gráficas</h4>
+
+  @if (candidates().length > 0) {
+    <fieldset class="selection">
+      <legend>Qué medir</legend>
+      @for (node of candidates(); track node.id) {
+        <label>
+          <input type="checkbox" [checked]="selected().has(node.id)" (change)="toggle(node, $any($event.target).checked)" />
+          {{ node.label }}
+        </label>
+      }
+    </fieldset>
+  }
+
+  <app-line-chart title="Mensajes por segundo" unit="mensajes/s" [series]="rates()" />
+  <app-line-chart title="Mensajes listos" unit="mensajes" [series]="ready()" />
+</section>
