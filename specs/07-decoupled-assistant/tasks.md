@@ -80,6 +80,6 @@ Una tarea solo se marca `[x]` cuando su «Hecho cuando» se ha ejecutado de verd
   Documentar la arquitectura, los perfiles, la memoria, las descargas y la velocidad por sistema operativo, y los comandos del módulo `assistant/`.
   *Hecho cuando:* el README cubre CA-4.3 y los comandos de AGENTS.md y del README coinciden con los reales.
 
-- [ ] **T13 — Verificación completa**
+- [x] **T13 — Verificación completa**
   Pruebas de todos los módulos, levantamiento en una copia limpia en los dos modos y prueba en Chrome.
   *Hecho cuando:* todo pasa con las pruebas de las especificaciones 01 a 06; desde «Estado» se para y se levanta RabbitMQ y el asistente en una copia limpia; y el usuario lo confirma en Chrome.
